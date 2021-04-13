@@ -288,13 +288,13 @@ function botGetImg(msg, client) {
             else {
                 msg.reply("Your query did not yield any results.");
             }
-        }).catch(err => msg.channel.send(err)) /* => {
+        }).catch(({response}) => {
             if (response == undefined) {
                 msg.channel.send("Unknown error...")
             } else {
                 msg.channel.send("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
             }
-        }); */
+        });
     }
     msg.channel.stopTyping();
 }
