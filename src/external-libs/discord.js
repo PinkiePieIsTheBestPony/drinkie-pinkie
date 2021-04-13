@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const reader = require('../json/jsonReader');
+const derpi = require('./derpi');
 
 /**
  * Creates an object which allows for images to be attached in messages and sent.
@@ -71,6 +72,24 @@ const createEmbeddedHelp = (msg) => {
     }
 }
 
+const createEmbeddedImg = (derpiObj, attachment) => {
+    return new Discord.MessageEmbed()
+    .setTitle("Derpibooru Image")
+    .setURL("https://derpibooru.org/" + derpiObj["id"])
+    .addField("Tags", derpiObj["tags"].join(", ").substring(0, 1020))
+    .addFields(
+        { name: "Score", value: derpiObj["score"] + "(+" + derpiObj["upvotes"] + "/-" + derpiObj["downvotes"] + ")", inline: true },
+        { name: '\u200B', value: '\u200B', inline: true },
+        { name: "Faves", value: derpiObj["faves"], inline: true },
+        { name: "Artist", value: derpi.getArtistDetails(derpiObj["tags"]), inline: true },
+        { name: '\u200B', value: '\u200B', inline: true },
+        { name: "Uploaded by", value: derpiObj["uploader"], inline: true }
+    )
+    .setImage(attachment)
+    .setFooter("Drinkie Pinkie - Made with 💜")
+}
+
 exports.initialiseDiscordJS = initialiseDiscordJS;
 exports.createDiscordAttachment = createDiscordAttachment;
 exports.createEmbeddedHelp = createEmbeddedHelp;
+exports.createEmbeddedImg = createEmbeddedImg;

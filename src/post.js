@@ -15,29 +15,19 @@ const send = (imageBuffer, derpiObject, isRequest, messageObject, client, messag
     if (imageBuffer != null) {
         //bypass/workaround for 8mb discord attachment upload limit
         if (Buffer.byteLength(imageBuffer) > 8000000) {
-            if (!isRequest && messageObject == null && serverID != null) {
-                client.guilds.cache.get(serverID).channels.cache.find(channel => channel.name.includes("bot")).send(derpiObject["viewUrl"]);
-            }
-            else {
-                messageObject.reply("Absolute CONKERS of an upload!!! " + derpiObject["viewUrl"]);
-                messageObject.channel.stopTyping();
-            }
+            client.guilds.cache.get(serverID).channels.cache.find(channel => channel.name.includes("bot")).send(derpiObject["viewUrl"]);
         }
         else {
             const attachment = discord.createDiscordAttachment(imageBuffer, derpiObject["format"], derpiObject["id"]);
             if (!isRequest && messageObject == null && serverID != null) {
-                client.guilds.cache.get(serverID).channels.cache.find(channel => channel.name.includes("bot")).send(message, attachment);
-            }
-            else if (message !== '') {
-                client.guilds.cache.array().forEach(guild => guild.channels.cache.find(channel => channel.name.includes("bot")).send(message, attachment));
+                client.guilds.cache.get(serverID).channels.cache.find(channel => channel.name.includes("bot")).send({message: message, files: [attachment], embed: discord.createEmbeddedImg(derpiObject, "attachment://" + attachment["name"])});
             }
             else {
-                messageObject.reply(attachment);
-                messageObject.channel.stopTyping();
+                client.guilds.cache.array().forEach(guild => guild.channels.cache.find(channel => channel.name.includes("bot")).send(message, attachment));
             }
         }
     } else {
-        messageObject.reply(derpiObject["viewUrl"]);
+        messageObject.reply("Result of your query: `" + messageObject.content.split(' ').slice(2).join(' ') + "`", discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"]));
         messageObject.channel.stopTyping();
     }
     

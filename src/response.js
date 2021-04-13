@@ -277,34 +277,24 @@ function botMessage(msg, client) {
  */
 function botGetImg(msg, client) {
     msg.channel.startTyping();
-    let download = false;
-    if (msg.content.startsWith("!dpi img --downloadImage ")) {
-        download = true;
-    }
     if (msg.content.includes("/") || msg.content.includes("\\") || msg.content.includes(";")) {
         msg.reply("GO AWAY")
     }
     else {
         derpi.getDerpibooruImage(msg.content, msg.channel.nsfw).then(({images}) => {
             if (Array.isArray(images) && images.length) {
-                if (download) {
-                    derpi.fetchDerpibooruImage(images[0], true, msg, client, null);
-                }
-                else {
-                    post.send(null, images[0], true, msg, client, '', null);
-                }
+                post.send(null, images[0], true, msg, client, '', null);
             }
             else {
-                msg.reply("OOPSIE WOOPSIE!! UWU I made a fucky wucky!! A wittle fucko boingo! The drunwkie ponwkie couwdn't find any wesuwts... UnU");
+                msg.reply("Your query did not yield any results.");
             }
-        }).catch(({response}) => {
-            if (msg.author.id == '113460834692268032') {
-                msg.channel.send("<@!113460834692268032>: the network returned the following error code: " + response.status + " - " + response.statusText);
+        }).catch(err => msg.channel.send(err)) /* => {
+            if (response == undefined) {
+                msg.channel.send("Unknown error...")
+            } else {
+                msg.channel.send("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
             }
-            else {
-                msg.channel.send("OOPSIE WOOPSIE!! UWU derpi made a fucky wucky!! A wittle fucko boingo! Hopefwully the code monkeys at their headquarters are working VEWY HAWD to fix this!");
-            }
-        });
+        }); */
     }
     msg.channel.stopTyping();
 }
@@ -640,6 +630,10 @@ function botGames(msg) {
     }
 }
 
+function botSource(msg) {
+    msg.reply("Here is the GitHub link! https://github.com/PinkiePieIsTheBestPony/drinkie-pinkie")
+}
+
 /**
  * Checks input from user regarding commands for Drinkie and will call relevant function
  * @public
@@ -653,7 +647,8 @@ const possibleResponses = (msg, client) => {
         ["!dpi random ", botGetRndNum],
         ["!dpi settings ", botSettingsEdit],
         ["!dpi game ", botGames],
-        ["!dpi dailyponk ", drinkieCount]
+        ["!dpi dailyponk ", drinkieCount],
+        ["!dpi source ", botSource]
     ]);
 
     if (msg.mentions.has(client.user)) {

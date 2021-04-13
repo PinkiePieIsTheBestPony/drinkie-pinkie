@@ -107,7 +107,7 @@ const cronValidator = (argument) => {
     const cronPattern = /((\* |\d{1,2} |\d{1,2}-\d{1,2} |(\d{1,2},)+\d{1,2} |\d{1,2}\/\d{1,2} ){4}(\*|\d{1,2}\/\d{1,2}|\d{1,2}-\d{1,2}|(\d{1,2},)+\d{1,2}|\d{1,2}))/;
     const cronParametersWords = {0: ["minute", 59], 1: ["hour", 23], 2: ["day of the month", 31], 3: ["month", 12], 4: ["day of the week", 7]};
     let messageToSend = "I will send a new image: ";
-    if (cronPattern.exec(argument)) {
+    if (cronPattern.exec(argument) && argument.split(" ").length == 5) {
         let arrayCron = argument.split(" ");
         for (i = 0; i < arrayCron.length; i++) {
             let maxLimit = cronParametersWords[i][1];

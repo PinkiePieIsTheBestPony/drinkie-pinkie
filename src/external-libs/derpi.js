@@ -13,6 +13,36 @@ function getArguments(message, query) {
     return message.replace(query, '').replace(/\s*,\s*/g, ",").split(',');
 }
 
+const getArtistDetails = (tagsArray) => {
+    const tags = tagsArray.toString();
+    if (tags.includes("artist:")) {
+        const numOfArtists = tags.match(new RegExp("artist:", "g") || []).length;
+        const pattern = /artist:./;
+        const arrOfTags = tags.split(",");
+        let tagsStripped = [];
+        let a = 0;
+        for (i = 0; i < arrOfTags.length; i++) {
+            if (numOfArtists == a) {
+                const artistsString = tagsStripped.join(", ");
+                return artistsString;
+            }
+            let tag = arrOfTags[i].trim();
+            if (pattern.test(tag)) {
+                let tagStripped = tag.substring(7);
+                if (numOfArtists > 1) {
+                    tagsStripped[a] = tagStripped;
+                    a++;
+                } else {
+                    return tagStripped;
+                }
+            }
+        }
+    }
+    else {
+        return "Unknown";
+    }
+}
+
 /**
  * Does an API call to Derpibooru and grabs a random image
  * @public
@@ -23,9 +53,6 @@ const getDerpibooruImage = (message, isNSFW) => {
     let tagList = '';
     if (message == null) {
         tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:100"];
-    }
-    else if (message.includes("!dpi img --downloadImage")) {
-        tagList = getArguments(message, '!dpi img --downloadImage ');
     }
     else if (message.includes("!dpi img")) {
         tagList = getArguments(message, '!dpi img ');
@@ -94,4 +121,5 @@ const fetchDerpibooruImage = (derpiObject, isRequest, messageObject, client, mes
 
 exports.getDerpibooruImage = getDerpibooruImage;
 exports.fetchDerpibooruImage = fetchDerpibooruImage;
-exports.getDerpibooruImageID = getDerpibooruImageID
+exports.getDerpibooruImageID = getDerpibooruImageID;
+exports.getArtistDetails = getArtistDetails;
