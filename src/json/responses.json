@@ -1,0 +1,12 @@
+{ "response": {
+    "msgLookFor": {
+        "1": "i love you"
+    },
+    "msgRespondWith": {
+        "1": { 
+            "everyone": "I love you too",
+            "msgForServer": "all"
+        }
+    }
+}
+}

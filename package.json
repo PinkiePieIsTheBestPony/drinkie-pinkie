@@ -1,0 +1,20 @@
+{
+  "name": "kuroge-wa-pony_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "post.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cron": "^1.8.2",
+    "dinky.js": "^1.1.0",
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0",
+    "node-fetch": "^2.6.1",
+    "pg-native": "^3.0.0",
+    "twit": "^2.2.11"
+  }
+}
