@@ -50,14 +50,14 @@ const getArtistDetails = (tagsArray) => {
  * @param {boolean} isNSFW Checks if channel the command is posted in is NSFW.
  */
 const getDerpibooruImage = (message, isNSFW) => {
-    let tagList = '';
+    let tagList = [];
     if (message == null) {
         tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:100"];
     }
     else if (message.includes("!dpi img")) {
         tagList = getArguments(message, '!dpi img ');
     }
-    else if (message.includes(",")) {
+    else {
         tagList = getArguments(message, '');
     }
     if (isNSFW) {

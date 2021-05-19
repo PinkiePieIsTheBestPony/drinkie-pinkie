@@ -14,7 +14,6 @@
     "discord.js": "^12.2.0",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.1",
-    "pg-native": "^3.0.0",
-    "twit": "^2.2.11"
+    "pg-native": "^3.0.0"
   }
 }

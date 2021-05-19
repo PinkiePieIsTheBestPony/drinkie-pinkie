@@ -1,5 +1,4 @@
 const discord = require('./external-libs/discord');
-const twitter = require('./external-libs/twitter');
 const derpi = require('./external-libs/derpi');
 const initDB = require('./db/initDB');
 const dbQueries = require('./db/dbQuery');
@@ -12,14 +11,9 @@ const { discord_key } = require('./config');
  * Initialises Drinkie client user, along with the DB and Twitter connectivity.
  */
 const client = discord.initialiseDiscordJS();
-const T = twitter.initialiseTwit();
 initDB.initialiseDB();
 
 client.login(discord_key);
-
-let stream = T.stream('statuses/filter', { 
-    track: '#毎日ピンキーパイ', follow: '910628947561295872' 
-});
 
 /**
  * When initialisation finishes - queries every server/guild Drinkie is in and ensures that there is a corresponding entry in DB. If not, will add that server/guild in.
@@ -70,8 +64,4 @@ client.on('guildCreate', guild => {
 
 client.on('message', msg => {
     responses.possibleResponses(msg, client);
-});
-
-stream.on('tweet', function(tweet) {
-    twitter.extractImage(tweet, client);
 });
