@@ -516,7 +516,7 @@ function channelEdit(msg) {
 
 function searchForDrinkie(searchType, searchValue, msg) {
     let fileJSON = jsonRead.getJSONFile("dailyponk.json");
-    if (!isNaN(searchValue)) {
+    if (!searchValue.includes("-")) {
         let d = new Date("2019-08-12");
         d.setDate(d.getDate() + parseInt(searchValue));
         searchValue = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();  
