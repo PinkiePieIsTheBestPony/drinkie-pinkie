@@ -84,7 +84,10 @@ function randomNumber(min, max) {
 function decision(userNum, botNum, msg) {
     let users = dbQuery.selectAllStatementDB("user_id, date_guessed, cooldown_time", "p_guesses", null, null, null);
     let jsonDB = dbQuery.selectAllStatementDB("query_id, json_prompt", "p_prompts", null, null, null);
+    let jsonDBResp = dbQuery.selectAllStatementDB("query_id, json_response", "p_prompts", null, null, null);
     let jsonDBArray = jsonDB.split('\n');
+    let jsonDBArrayResp = jsonDBResp.split('\n').filter(a => a[1].includes(msg.guild.id) || a[1].includes("all"));
+    let a = jsonDBArrayResp.length;
     let jsonResponse = '';
     for (let i = 0; i < jsonDBArray.length; i++) {
         let resultArray = jsonDBArray[i].replace(",", "¬").split("¬");
@@ -95,7 +98,7 @@ function decision(userNum, botNum, msg) {
     let jsonObject = JSON.parse(json);
     let usersArray = users.split('\n');
     let sentMsg = jsonObject["response"]["msgLookFor"];
-    let numOfResp = Object.keys(sentMsg).length;
+    //let numOfResp = Object.keys(sentMsg).length;
     let userExist = false;
     for (i = 0; i < usersArray.length; i++) {
         let usersArraySplit = usersArray[i].split(",");
@@ -106,14 +109,16 @@ function decision(userNum, botNum, msg) {
             if (currentTime - usersArraySplit[1] > cooldownMS) {
                 let response = 'Your number was: "' + userNum + '" while mine was "' + botNum + '". \n';
                 if (userNum == botNum) {
-                    promptNum = randomNumber(1, numOfResp);
-                    let authorID = dbQuery.selectAllStatementDB("submitted_by", "p_prompts", "query_id", "=", promptNum);
+                    //promptNum = randomNumber(1, numOfResp);
+                    promptNum = randomNumber(1, a)
+                    let indexPromptNum = jsonDBArrayResp[0][a];
+                    let authorID = dbQuery.selectAllStatementDB("submitted_by", "p_prompts", "query_id", "=", indexPromptNum);
                     msg.reply(response + "The number that you said or generated was the same as mine! Here is your random prompt: \"" + sentMsg[promptNum] + "\" which was provided by: <@!" + authorID + ">");
                 }
                 else {
                     msg.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
-                    dbQuery.updateStatementDB("p_guesses", "date_guessed", currentTime, "user_id", msg.author.id);
-                    dbQuery.updateStatementDB("p_guesses", "cooldown_time", "4", "user_id", msg.author.id);
+                    dbQuery.updateStatementDB("p_guesses", "date_guessed", ["user_id"], [currentTime, msg.author.id]);
+                    dbQuery.updateStatementDB("p_guesses", "cooldown_time", ["user_id"], ["4", msg.author.id]);
                 }
                 
             }
@@ -132,7 +137,7 @@ function decision(userNum, botNum, msg) {
         }
         else {
             msg.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
-            dbQuery.updateStatementDB("p_guesses", "date_guessed", Date.now(), "user_id", msg.author.id);
+            dbQuery.updateStatementDB("p_guesses", "date_guessed", ["user_id"], [Date.now(), msg.author.id]);
         }
     }
 }
@@ -283,7 +288,7 @@ function botGetImg(msg, client) {
     else {
         derpi.getDerpibooruImage(msg.content, msg.channel.nsfw).then(({images}) => {
             if (Array.isArray(images) && images.length) {
-                post.send(null, images[0], true, msg, client, '', null);
+                post.send(null, images[0], true, msg, client, '', null, null);
             }
             else {
                 msg.reply("Your query did not yield any results.");
@@ -334,7 +339,7 @@ function randomEdit(msg) {
         let remainingArguments = msg.content.replace('!dpi settings random ', '');
         let numberEnforce = remainingArguments.split(" ")[0];
         let userID = msg.mentions.users.first().id;
-        dbQuery.updateStatementDB("p_guesses", "cooldown_time", numberEnforce, "user_id", userID);
+        dbQuery.updateStatementDB("p_guesses", "cooldown_time", ["user_id"], [numberEnforce, "user_id", userID]);
         msg.reply("Hi creator! I have changed the cooldown period for <@!" + userID + "> to " + numberEnforce + " hours.");
     } else {
         msg.reply("You are not the creator!")
@@ -355,7 +360,7 @@ function rotationEdit(msg) {
         if (queryID !== '') {
             cronStatus = cron.cronValidator(cronArguments);
             if (cronStatus) {
-                dbQuery.updateStatementDB("p_rotation", "rotation", cronArguments, "server_id, server_query_id", [msg.guild.id, number]);
+                dbQuery.updateStatementDB("p_rotation", "rotation", ["server_id", "server_query_id"], [cronArguments, msg.guild.id, number]);
                 msg.reply(cronStatus);
             }
             else {
@@ -382,7 +387,7 @@ function rotationList(msg) {
     let messageResponse = '';
 
     if (allValues == '') {
-        messageResponse = 'There are current no queries in this server. MAKE SOME, REEEEEEEEE'
+        messageResponse = 'There are current no queries in this server.'
     } else {
         for (let i = 0; i < arrayRotation.length; i++) {
             let rotationID = arrayRotation[i].split(', ')[0];
@@ -403,8 +408,12 @@ function queryNew(msg) {
     let query = msg.content.replace('!dpi settings query new ', '');
 
     let maxNumber = dbQuery.selectAllStatementDB("MAX(server_query_id)", "p_queries", null, null, null);
+    let botChannel = msg.guild.channels.cache.find(channel => channel.name.includes("bot"));
+    if (botChannel === undefined) {
+        botChannel = "noChannelFoundForDrinkie"
+    }
     
-    dbQuery.insertStatementDB("p_queries(search_query, server_id, server_query_id)", query, msg.guild.id, Number(maxNumber) + 1);
+    dbQuery.insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", query, botChannel, msg.guild.id, Number(maxNumber) + 1);
     dbQuery.insertStatementDB("p_rotation(rotation, server_id, server_query_id)", "0 0/6 * * *", msg.guild.id, Number(maxNumber) + 1);
 
     msg.reply("Query has been added!")
@@ -416,17 +425,18 @@ function queryNew(msg) {
  * @param {Message} msg Message object, generated based on message by user
  */
 function queryList(msg) {
-    let allValues = dbQuery.selectAllStatementDB("server_query_id, search_query", "p_queries", "server_id", "=", msg.guild.id);
+    let allValues = dbQuery.selectAllStatementDB("server_query_id, channel_name, search_query", "p_queries", "server_id", "=", msg.guild.id);
     let arrayQuery = allValues.split('\n');
     let messageResponse = '';
 
     if (allValues == '') {
-        messageResponse = 'There are currently no queries in this server. Make some, REEEEEEEEE'
+        messageResponse = 'There are currently no queries in this server.'
     } else {
         for (let i = 0; i < arrayQuery.length; i++) {
             let queryID = arrayQuery[i].split(', ')[0];
-            let query = arrayQuery[i].split(', ').slice(1).join(', ');
-            messageResponse += "query_id: " + queryID + ", QUERY_STRING: " + query + "\n";
+            let channelName = arrayQuery[i].split(', ')[1];
+            let query = arrayQuery[i].split(', ').splice(2).join(', ');
+            messageResponse += "query_id: " + queryID + ", QUERY_STRING: " + query + ", QUERY_CHANNEL: " + channelName + "\n";
         }
     }
 
@@ -443,8 +453,8 @@ function queryRemove(msg) {
     if (!isNaN(number)) {
         let queryID = dbQuery.selectAllStatementDB("server_query_id", "p_queries", "server_query_id", "=", number);
         if (queryID !== '') {
-            dbQuery.removeStatementDB("p_queries", "server_id, server_query_id", [msg.guild.id, number]);
-            dbQuery.removeStatementDB("p_rotation", "server_id, server_query_id", [msg.guild.id, number]);
+            dbQuery.removeStatementDB("p_queries", ["server_id", "server_query_id"], [msg.guild.id, number]);
+            dbQuery.removeStatementDB("p_rotation", ["server_id", "server_query_id"], [msg.guild.id, number]);
             msg.reply("Query schedule has been removed.")
         }
         else {
@@ -468,8 +478,32 @@ function queryEdit(msg) {
     if (!isNaN(number)) {
         let numberExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", "server_query_id", "=", number);
         if (numberExists !== false) {
-            dbQuery.updateStatementDB("p_queries", "search_query", queryList, "server_id, server_query_id", [msg.guild.id, number]);
+            dbQuery.updateStatementDB("p_queries", "search_query", ["server_id", "server_query_id"], [queryList, msg.guild.id, number]);
             msg.reply("Image schedule ID:" + number + " query has been updated.")
+        }
+        else {
+            msg.reply("Query ID cannot be found.")
+        }
+    }
+    else {
+        msg.reply("ID is not a valid number.")
+    }
+}
+
+function channelEdit(msg) {
+    let remainingArgs = msg.content.replace('!dpi settings channel edit ', '');
+    let number = remainingArgs.substr(0, remainingArgs.indexOf(" "));
+    let channelName = remainingArgs.substr(remainingArgs.indexOf(" ") + 1);
+    if (!isNaN(number)) {
+        let numberExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", "server_query_id", "=", number);
+        if (numberExists !== false) {
+            let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName);
+            if (channelId !== undefined) {
+                dbQuery.updateStatementDB("p_queries", "channel_name", ["server_id", "server_query_id"], [channelId, msg.guild.id, number]);
+                msg.reply("Image schedule ID:" + number + " channel has been updated.")
+            } else {
+                msg.reply("Channel name cannot be found.")
+            }
         }
         else {
             msg.reply("Query ID cannot be found.")
@@ -482,37 +516,30 @@ function queryEdit(msg) {
 
 function searchForDrinkie(searchType, searchValue, msg) {
     let fileJSON = jsonRead.getJSONFile("dailyponk.json");
-    let startDate = new Date("2019-08-12");
-    let jsonResult = '';
-    if (searchValue instanceof Date) {
-        let jsonDate = searchValue.getDate() + '/' + (searchValue.getMonth() + 1) + '/' + searchValue.getFullYear()
-        jsonResult = fileJSON["drinkiepic"][searchType][jsonDate];
+    if (!isNaN(searchValue)) {
+        let d = new Date("2019-08-12");
+        d.setDate(d.getDate() + parseInt(searchValue));
+        searchValue = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();  
     }
-    else {
-        startDate.setDate(startDate.getDate() + parseInt(searchValue));
-        let jsonDate = startDate.getDate() + '/' + (startDate.getMonth() + 1) + '/' + startDate.getFullYear()
-        jsonResult = fileJSON["drinkiepic"][searchType][jsonDate];
-    }
+    let jsonResult = fileJSON["drinkiepic"][searchType][searchValue];
     msg.reply(jsonResult["link"]);
 }
 
 function drinkieCount(msg) {
-    //!dpi dailyponk day 5/10/2010
-    //!dpi dailyponk bonus ... 
     let driValQuery = msg.content.replace('!dpi dailyponk ', '');
     let driValArr = driValQuery.split(" ");
     if (driValArr.length == 2) {
         let driValType = driValArr[0];
         let driValString = driValArr[1];
-        if (driValString.includes("/")) {
-            let splitVals = driValString.split("/");
+        if (driValString.includes("-")) {
+            let splitVals = driValString.split("-");
             if (splitVals.length == 3) {
-                let dateDri = new Date(splitVals[2] + "-" + splitVals[1] + "-" + splitVals[0]);
+                let dateDri = new Date(driValString);
                 const firstDay = new Date("2019-08-13")
                 const lastDay = new Date("2020-08-12");
                 const bonusDays = [new Date("2019-10-11"), new Date("2019-10-12"), new Date("2019-10-31"), new Date("2019-11-02"), new Date("2019-11-08"), new Date("2019-11-09"), new Date("2019-28-10"), new Date("2020-03-21")] 
                 if (firstDay <= dateDri && lastDay >= dateDri) {
-                    if (Boolean(+dateDri) && dateDri.getDate() == splitVals[0] && driValType == "day") {
+                    if (Boolean(+dateDri) && dateDri.getFullYear() == splitVals[0] && driValType == "day") {
                         searchForDrinkie(driValType, dateDri, msg);
                     }
                     else if (driValType == "bonuses" && bonusDays.find(bonusDay => { return bonusDay.getTime() == dateDri.getTime() })) {
@@ -534,13 +561,15 @@ function drinkieCount(msg) {
             let indexDri;
             if (driValType == "day") {
                 indexDri = Math.floor(Math.random() * 366 + 1);
-                type = "day"
+                searchForDrinkie(driValType, indexDri, msg);
             } else if (driValType == "bonuses") {
                 indexDri = Math.floor(Math.random() * 8);
                 const vals = [60, 61, 77, 80, 82, 88, 89, 222];
                 indexDri = vals[indexDri];
+                searchForDrinkie(driValType, indexDri, msg);
+            } else {
+                msg.reply("Invalid type of value!")
             }
-            searchForDrinkie(driValType, indexDri, msg);
         } 
         else {
             if (!isNaN(driValString)) {
@@ -579,6 +608,7 @@ function botSettingsEdit(msg) {
         ["query list", queryList],
         ["query remove", queryRemove],
         ["query edit", queryEdit],
+        ["channel edit", channelEdit]
     ]);
 
     let functionName = settingsKeyPair.get(msg.content.split(' ').slice(2, 4).join(' '));
