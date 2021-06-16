@@ -540,10 +540,10 @@ function drinkieCount(msg) {
                 const bonusDays = [new Date("2019-10-11"), new Date("2019-10-12"), new Date("2019-10-31"), new Date("2019-11-02"), new Date("2019-11-08"), new Date("2019-11-09"), new Date("2019-28-10"), new Date("2020-03-21")] 
                 if (firstDay <= dateDri && lastDay >= dateDri) {
                     if (Boolean(+dateDri) && dateDri.getFullYear() == splitVals[0] && driValType == "day") {
-                        searchForDrinkie(driValType, dateDri, msg);
+                        searchForDrinkie(driValType, driValString, msg);
                     }
                     else if (driValType == "bonuses" && bonusDays.find(bonusDay => { return bonusDay.getTime() == dateDri.getTime() })) {
-                        searchForDrinkie(driValType, dateDri, msg);
+                        searchForDrinkie(driValType, driValString, msg);
                     }
                     else {
                         msg.reply("Invalid date range...")
