@@ -12,5 +12,4 @@ Uses the following node libraries:
 - [dinky.js](https://github.com/octet-stream/dinky)
 - [cron](https://github.com/kelektiv/node-cron)
 - [dotenv](https://github.com/motdotla/dotenv)
-- [node-fetch](https://github.com/node-fetch/node-fetch)
 - [pg-native](https://github.com/brianc/node-pg-native)
