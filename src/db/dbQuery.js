@@ -8,10 +8,7 @@ const db = require('./db');
 const insertStatementDB = (insertTable, ...dbArgs) => {
     let dbCon = db.dbConnect();
 
-    let varCounter = 1;
-    let argsNumbered = dbArgs.map(function(name, i) {  
-        return '$'+(i+varCounter);
-    }).join(",")
+    let argsNumbered = dbArgs.map((name, i) => "$"+(i+1)).join(",")
     
     dbCon.querySync("INSERT INTO " +  insertTable + " VALUES (" + argsNumbered + ")", dbArgs);
 
@@ -85,16 +82,11 @@ const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, where
  * @param {String} whereColumn Identification clarification to help determine which data will be selected (the specific column where the data is)
  * @param {String} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
  */
-const updateStatementDB = (table, setColumn, setAnswer, whereColumn, whereAnswer) => {
+const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) => {
     let dbCon = db.dbConnect();
 
-    if (Array.isArray(whereAnswer)) {
-        let whereArray = whereColumn.split(", ");
-        dbCon.querySync("UPDATE " + table + " SET " + setColumn + " = $1 WHERE " + whereArray[0] + " = $2 AND " + whereArray[1] + " = $3", [setAnswer, whereAnswer[0], whereAnswer[1]]);
-    }
-    else {
-        dbCon.querySync("UPDATE " + table + " SET " + setColumn + " = $1 WHERE " + whereColumn + " = $2", [setAnswer, whereAnswer]);
-    }
+    statement = whereColumns.map((column, i) => i === (whereColumns.length-1) && i !== 0 ? " AND " + column + " = $" + (i+2) : column + " = $" + (i+2)).join("");
+    dbCon.querySync("UPDATE " + table + " SET " + setColumn + " = $1 WHERE " + statement, whereAnswers)
     
     dbCon.end();
 }
@@ -106,12 +98,12 @@ const updateStatementDB = (table, setColumn, setAnswer, whereColumn, whereAnswer
  * @param {String} whereColumn The specific column where data will be removed from
  * @param {String} whereAnswer The identifier to help clarify which data will be removed
  */
-const removeStatementDB = (table, whereColumn, whereAnswer) => {
+const removeStatementDB = (table, whereColumns, whereAnswers) => {
     let dbCon = db.dbConnect();
 
-    let whereArray = whereColumn.split(", ");
+    let statement = whereColumns.map((column, i) => i === (whereColumns.length-1) && i !== 0 ? " AND " + column + " = $" + (i+1) : column + " = $" + (i+1)).join("");
 
-    dbCon.querySync("DELETE FROM " + table + " WHERE " + whereArray[0] + " = $1 AND " + whereArray[1] + " = $2", [whereAnswer[0], whereAnswer[1]]);
+    dbCon.querySync("DELETE FROM " + table + " WHERE " + statement, whereAnswers);
     
     dbCon.end();
 }

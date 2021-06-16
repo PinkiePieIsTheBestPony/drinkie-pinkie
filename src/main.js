@@ -42,13 +42,16 @@ client.on('ready', () => {
                     let rotationQuery = resultArray[1];
                     let rotationServerID = resultArray[2];
                     let serverID = resultArray[3];
-                    if (cron.cronChecker(rotationQuery)) {
-                        let queryForServer = dbQueries.selectAllStatementDB("search_query", "p_queries", "server_query_id, server_id", "=", [rotationServerID, serverID]);
-                        derpi.getDerpibooruImage(queryForServer, false).then(({images}) => {
-                            if (Array.isArray(images) && images.length) {
-                                derpi.fetchDerpibooruImage(images[0], false, null, client, '', serverID);
-                            }
-                        });
+                    let channelQueryForServer = dbQueries.selectAllStatementDB("channel_name", "p_queries", "server_query_id, server_id", "=", [rotationServerID, serverID]);
+                    if (channelQueryForServer !== "noChannelFoundForDrinkie") {
+                        if (cron.cronChecker(rotationQuery)) {
+                            let queryForServer = dbQueries.selectAllStatementDB("search_query", "p_queries", "server_query_id, server_id", "=", [rotationServerID, serverID]);
+                            derpi.getDerpibooruImage(queryForServer, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw).then(({images}) => {
+                                if (Array.isArray(images) && images.length) {
+                                    derpi.fetchDerpibooruImage(images[0], false, null, client, '', serverID, channelQueryForServer);
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -56,6 +59,14 @@ client.on('ready', () => {
         null,
         true
     )
+});
+
+client.on('guildDelete', guild => {
+    if (guild.available) {
+        dbQueries.removeStatementDB("p_rotation", ["server_id"], [guild.id]);
+        dbQueries.removeStatementDB("p_queries", ["server_id"], [guild.id]);
+        dbQueries.removeStatementDB("p_server", ["server_id"], [guild.id]);
+    }
 });
 
 client.on('guildCreate', guild => {
