@@ -5,6 +5,7 @@ const dbQueries = require('./db/dbQuery');
 const cron = require('./cron');
 const responses = require('./response');
 const nodeCron = require('cron');
+const post = require('./post');
 const { discord_key } = require('./config');
 
 /**
@@ -48,7 +49,7 @@ client.on('ready', () => {
                             let queryForServer = dbQueries.selectAllStatementDB("search_query", "p_queries", "server_query_id, server_id", "=", [rotationServerID, serverID]);
                             derpi.getDerpibooruImage(queryForServer, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw).then(({images}) => {
                                 if (Array.isArray(images) && images.length) {
-                                    derpi.fetchDerpibooruImage(images[0], false, null, client, '', serverID, channelQueryForServer);
+                                    post.send(images[0], false, null, client, '', serverID, channelQueryForServer);
                                 }
                             });
                         }

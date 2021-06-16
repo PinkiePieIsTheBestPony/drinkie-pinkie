@@ -1,6 +1,4 @@
 const dinky = require('dinky.js');
-const fetch = require('node-fetch');
-const post = require('../post');
 const { derpi_key } = require('../config');
 
 /**
@@ -102,24 +100,6 @@ const getDerpibooruImageID = (id) => {
     return dinky({key: derpi_key}).images().getById(id);
 }
 
-/**
- * Downloads the image and puts it into a Buffer Object
- * @public
- * @param {Images} derpiObject [dinky.js] The derpibooru object which contains all the information about the random image selected.
- * @param {boolean} isRequest Checks if the reason for image being sent is from a !dpi img message.
- * @param {Message} messageObject [Discord.js] Message object, generated based on message by user
- * @param {String} message Message to add to post
- * @param {Client} client [Discord.js] Client object, this represents Drinkie on the server where the message was sent
- * @param {String} serverID The specific ID of the Server in which the bot is sending the image to, so it only sends to that server (in most cases).
- */
-const fetchDerpibooruImage = (derpiObject, isRequest, messageObject, client, message, serverID) => {
-    fetch(derpiObject["viewUrl"])
-    .then(res => res.buffer())
-    .then(buffer => post.send(buffer, derpiObject, isRequest, messageObject, client, message, serverID))
-    .catch(error => console.error(error))
-}
-
 exports.getDerpibooruImage = getDerpibooruImage;
-exports.fetchDerpibooruImage = fetchDerpibooruImage;
 exports.getDerpibooruImageID = getDerpibooruImageID;
 exports.getArtistDetails = getArtistDetails;

@@ -288,7 +288,7 @@ function botGetImg(msg, client) {
     else {
         derpi.getDerpibooruImage(msg.content, msg.channel.nsfw).then(({images}) => {
             if (Array.isArray(images) && images.length) {
-                post.send(null, images[0], true, msg, client, '', null, null);
+                post.send(images[0], true, msg, client, '', null, null);
             }
             else {
                 msg.reply("Your query did not yield any results.");
