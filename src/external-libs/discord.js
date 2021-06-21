@@ -3,17 +3,6 @@ const reader = require('../json/jsonReader');
 const derpi = require('./derpi');
 
 /**
- * Creates an object which allows for images to be attached in messages and sent.
- * @public
- * @param {Buffer} imageBuffer Downloaded image data respresentation object.
- * @param {String} format Actual format of the Buffer Object
- * @param {String} name Name of the file to be sent
- */
-const createDiscordAttachment = (imageBuffer, format, name) => {
-    return new Discord.MessageAttachment(imageBuffer, name + '.' + format.toLowerCase());
-}
-
-/**
  * Initialise Drinkie
  * @public
  */
@@ -23,7 +12,7 @@ const initialiseDiscordJS = () => {
 
 /**
  * Reads a JSON file and creates a new messageEmbed object to be sent which a user needs help
- * @param {Message} msg [Discord.js] Message object, generated based on message by user
+ * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
 const createEmbeddedHelp = (msg) => {
     let parsedData = reader.getJSONFile('help.json')
@@ -90,6 +79,5 @@ const createEmbeddedImg = (derpiObj, attachment) => {
 }
 
 exports.initialiseDiscordJS = initialiseDiscordJS;
-exports.createDiscordAttachment = createDiscordAttachment;
 exports.createEmbeddedHelp = createEmbeddedHelp;
 exports.createEmbeddedImg = createEmbeddedImg;
