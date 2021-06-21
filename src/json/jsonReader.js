@@ -1,5 +1,4 @@
 const fs = require('fs');
-const { env_state } = require('../config');
 
 /**
  * Parses JSON files on filesystem

@@ -3,12 +3,12 @@ const discord = require('./external-libs/discord');
 /**
  * Where all posts which either require an image attached, or contain a Derpibooru request are posted (including the scheduled posts).
  * @public
- * @param {Images} derpiObject [dinky.js] The derpibooru object which contains all the information about the random image selected.
+ * @param {object} derpiObject [dinky.js] The derpibooru object which contains all the information about the random image selected.
  * @param {boolean} isRequest Checks if the reason for image being sent is from a !dpi img message.
- * @param {Message} messageObject [Discord.js] Message object, generated based on message by user
- * @param {Client} client [Discord.js] Client object, this represents Drinkie on the server where the message was sent
- * @param {String} message Sometimes images are sent with a message (Daily Pinkie Pie).
- * @param {String} serverID The specific ID of the Server in which the bot is sending the image to, so it only sends to that server (in most cases).
+ * @param {object} messageObject [Discord.js] Message object, generated based on message by user
+ * @param {object} client [Discord.js] Client object, this represents Drinkie on the server where the message was sent
+ * @param {string} message Sometimes images are sent with a message (Daily Pinkie Pie).
+ * @param {string} serverID The specific ID of the Server in which the bot is sending the image to, so it only sends to that server (in most cases).
  */
 const send = (derpiObject, isRequest, messageObject, client, message, serverID, channelQueryForServer) => {
     if (channelQueryForServer != null) {

@@ -4,7 +4,7 @@ const { derpi_key } = require('../config');
 /**
  * Shortcut function which takes a command and strips it for the neccessary data and turns it into an array
  * @private
- * @param {Message} message [Discord.js] Message object, generated based on message by user
+ * @param {object} message [Discord.js] Message object, generated based on message by user
  * @param {string} query The actual query to strip and turn into an array
  */
 function getArguments(message, query) {
@@ -44,7 +44,7 @@ const getArtistDetails = (tagsArray) => {
 /**
  * Does an API call to Derpibooru and grabs a random image
  * @public
- * @param {Message} message [Discord.js] Message object, generated based on message by user
+ * @param {object} message [Discord.js] Message object, generated based on message by user
  * @param {boolean} isNSFW Checks if channel the command is posted in is NSFW.
  */
 const getDerpibooruImage = (message, isNSFW) => {

@@ -1,6 +1,6 @@
 /**
  * Shortcut function that appends th/st/nd/rd to a number depending on what it is.
- * @param {int} number The number that will be appended to.
+ * @param {number} number The number that will be appended to.
  */
 function nth(number) {
     if (number > 3 && number < 21) return 'th';
@@ -15,8 +15,8 @@ function nth(number) {
 /**
  * Shortcut function to convert number representation of month/week to string representation
  * @private
- * @param {int} number Representations the number representation to be converted
- * @param {int} index Refers to which part of the cron it's at (i.e. either day or month)
+ * @param {number} number Representations the number representation to be converted
+ * @param {number} index Refers to which part of the cron it's at (i.e. either day or month)
  */
 function quickConvert(number, index) {
     number -= 1;
@@ -36,7 +36,7 @@ function quickConvert(number, index) {
 /**
  * Checks existing cron query and determines if the cron matches the time.
  * @public
- * @param {String} query The cron query to check.
+ * @param {string} query The cron query to check.
  */
 const cronChecker = (query) => {
     //date stuff
@@ -101,7 +101,7 @@ const cronChecker = (query) => {
 /**
  * When creating a new cron query, checks if it is a valid syntax.
  * @public
- * @param {String} argument The cron query to validate.
+ * @param {string} argument The cron query to validate.
  */
 const cronValidator = (argument) => {
     const cronPattern = /((\* |\d{1,2} |\d{1,2}-\d{1,2} |(\d{1,2},)+\d{1,2} |\d{1,2}\/\d{1,2} ){4}(\*|\d{1,2}\/\d{1,2}|\d{1,2}-\d{1,2}|(\d{1,2},)+\d{1,2}|\d{1,2}))/;

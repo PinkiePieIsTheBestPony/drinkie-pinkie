@@ -2,8 +2,8 @@ const db = require('./db');
 
 /**
  * DB insert query shortcuts
- * @param {String} insertTable Table to insert data into
- * @param {Array} dbArgs Rest parameter which contains all arguments needed for insert DB statements
+ * @param {string} insertTable Table to insert data into
+ * @param {string[]} dbArgs Rest parameter which contains all arguments needed for insert DB statements
  */
 const insertStatementDB = (insertTable, ...dbArgs) => {
     let dbCon = db.dbConnect();
@@ -17,11 +17,11 @@ const insertStatementDB = (insertTable, ...dbArgs) => {
 
 /**
  * DB select query shortcuts
- * @param {String} selectColumns The columns you want to select to see information from
- * @param {String} table The specific table that these columns will exist on
- * @param {String} whereColumn Identification clarification to help determine which data will be selected (the specific column where the data is)
- * @param {String} equalsTo Relation between column and answer
- * @param {String} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
+ * @param {string} selectColumns The columns you want to select to see information from
+ * @param {string} table The specific table that these columns will exist on
+ * @param {string} whereColumn Identification clarification to help determine which data will be selected (the specific column where the data is)
+ * @param {string} equalsTo Relation between column and answer
+ * @param {string} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
  */
 const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, whereAnswer) => {
     let allResults = '';
@@ -76,11 +76,11 @@ const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, where
 
 /**
  * Update DB query shortcuts
- * @param {String} table The name of the table to update data from
- * @param {String} setColumn The specific column where data will be updated
- * @param {String} setAnswer The specific new information that will replace the old information
- * @param {String} whereColumn Identification clarification to help determine which data will be selected (the specific column where the data is)
- * @param {String} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
+ * @param {string} table The name of the table to update data from
+ * @param {string} setColumn The specific column where data will be updated
+ * @param {string} setAnswer The specific new information that will replace the old information
+ * @param {string} whereColumn Identification clarification to help determine which data will be selected (the specific column where the data is)
+ * @param {string} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
  */
 const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) => {
     let dbCon = db.dbConnect();
@@ -94,9 +94,9 @@ const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) => {
 /**
  * Delete DB query shortcuts
  * @public
- * @param {String} table The name of the table to remove data from
- * @param {String} whereColumn The specific column where data will be removed from
- * @param {String} whereAnswer The identifier to help clarify which data will be removed
+ * @param {string} table The name of the table to remove data from.
+ * @param {string} whereColumn The specific column where data will be removed from.
+ * @param {string} whereAnswer The identifier to help clarify which data will be removed
  */
 const removeStatementDB = (table, whereColumns, whereAnswers) => {
     let dbCon = db.dbConnect();
@@ -111,7 +111,7 @@ const removeStatementDB = (table, whereColumns, whereAnswers) => {
 /**
  * Insert DB query shortcuts
  * @public
- * @param {Guild} guild Represents Discord server (the server that Drinkie tries to initalise herself on)
+ * @param {object} guild Represents Discord server (the server that Drinkie tries to initalise herself on)
  */
 const insertGuildDetails = (guild) => {
     pQuery = "pinkie pie, safe, solo, !webm, score.gte:100";
