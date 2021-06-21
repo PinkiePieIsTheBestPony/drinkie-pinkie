@@ -1,3 +1,5 @@
+var peoplePlaying = [];
+
 /**
  * Make the gameboard
  */
@@ -13,7 +15,7 @@ function initTTT() {
 /**
  * Determine who starts and what symbol they'll be using
  * @private
- * @param {Array} players Contains both player's Discord IDs.
+ * @param {string[]} players Contains both player's Discord IDs.
  */
 function setupTTT(players) {
     let rankings = {};
@@ -27,11 +29,11 @@ function setupTTT(players) {
 }
 
 /**
- * Custom function to simulate muttable Strings since they don't exist within JavaScript
+ * Custom function to simulate mutable Strings since they don't exist within JavaScript
  * @private
- * @param {String} string String which will be being modified
- * @param {int} index This will specify the specific position within the above text variable that will be replaced
- * @param {String} replacement Index position value above will be replaced with this string value
+ * @param {string} string String which will be being modified
+ * @param {number} index This will specify the specific position within the above text variable that will be replaced
+ * @param {string} replacement Index position value above will be replaced with this string value
  */
 function replaceAtIndex(string, index, replacement) {
     return string.substr(0, index) + replacement + string.substr(index + replacement.length);
@@ -40,9 +42,9 @@ function replaceAtIndex(string, index, replacement) {
 /**
  * This function will specifically change the tic tac toe board to add the ❌ & ⭕
  * @private
- * @param {Map} filledSlots This holds the particular position of symbols within the game
- * @param {Array} indexSlots This holds information about which index positions to replace for the game
- * @param {String} board String representation of the gameboard which is shown in chat
+ * @param {object} filledSlots This holds the particular position of symbols within the game
+ * @param {number[]} indexSlots This holds information about which index positions to replace for the game
+ * @param {string} board String representation of the gameboard which is shown in chat
  */
 function fillBoard(filledSlots, indexSlots, board) {
     let slotToEmoji = {"X": "❌", "O": "⭕" }
@@ -61,8 +63,8 @@ function fillBoard(filledSlots, indexSlots, board) {
 /**
  * Checks if a win-condition has been reached, with epic performance boost
  * @private
- * @param {Map} filledSlots This holds the particular position of symbols within the game
- * @param {String} symbol The nought or cross
+ * @param {object} filledSlots This holds the particular position of symbols within the game
+ * @param {string} symbol The nought or cross
  */
 function validate(filledSlots, symbol) {
     //i dunno
@@ -79,6 +81,21 @@ function validate(filledSlots, symbol) {
     return false;
 }
 
+/**
+ * Main game recursive loop for tic-tac-toe, does the following things ->
+ * 1) Checks who's turn to play
+ * 2) Check status of board, and send message asking where player will place, done through reacting to the number that corresponds to your position
+ * 3) Loops through until either somebody wins or the game ends in a tie (or an error occurs)
+ * @param {object} msg [Discord.js] Message object representation of message that kicked off game.
+ * @param {object} player Dictionary object that contains details about particular player who is player (ID & whether they play first or second).
+ * @param {object} numToWord Dictionary object that converts emoji to number.
+ * @param {number} numberOfTurns Amount of turns until game is over.
+ * @param {string} board Array that contains representation of the game board - starts blank, but values within string are replaced with X & Os.
+ * @param {object} filledSlots Dictionary that keeps which parts of the board have been filled in and which parts haven't.
+ * @param {object} rankings Dictionary object that contains details of the two players.
+ * @param {number[]} indexSlots This holds information about which index positions to replace for the game
+ * @returns 
+ */
 async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlots, rankings, indexSlots) {
     if ([1, 3, 5, 7, 9].includes(numberOfTurns)) {
         player = rankings['first']
@@ -90,12 +107,14 @@ async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlo
 
     try {
         let msgGame = await msg.channel.send(board + "\nIt is your turn to choose a number which correlates to your spot, <@!" + player[0] + ">");
-        for (let i = 0; i < filledSlots.length; i++) {
-            if (filledSlots[i+1] == null) { await msgGame.react(Object.keys(numToWord)[i]) }
+        for (let i = 0; i < Object.keys(filledSlots).length; i++) {
+            if (filledSlots[i+1] === null) {
+                await msgGame.react(Object.keys(numToWord)[i]) 
+            }
         }
 
-        const filter = (reaction, user) => { return user.id == player[0] && (reaction.name.emoji == "1️⃣" || reaction.name.emoji == "2️⃣" || reaction.name.emoji == "3️⃣" || reaction.name.emoji == "4️⃣" || 
-        reaction.name.emoji == "5️⃣" || reaction.name.emoji == "6️⃣" || reaction.name.emoji == "7️⃣" || reaction.name.emoji == "8️⃣" || reaction.name.emoji == "9️⃣") };
+        const filter = (reaction, user) => { return user.id == player[0] && (reaction.emoji.name == "1️⃣" || reaction.emoji.name == "2️⃣" || reaction.emoji.name == "3️⃣" || reaction.emoji.name == "4️⃣" || 
+        reaction.emoji.name == "5️⃣" || reaction.emoji.name == "6️⃣" || reaction.emoji.name == "7️⃣" || reaction.emoji.name == "8️⃣" || reaction.emoji.name == "9️⃣") };
         const collector = await msgGame.createReactionCollector(filter);
 
         collector.on('collect', (reaction, user) => {
@@ -112,8 +131,8 @@ async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlo
                 result = validate(filledSlots, player[1]);
                 if (result) {
                     board = fillBoard(filledSlots, indexSlots, board);
-                    msg.channel.send(board + "\nCongrats <@!" + player[0] + ">, you have won!")
-                    return 0;
+                    msg.channel.send(board + "\nCongrats <@!" + player[0] + ">, you have won!");
+                    peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
                 }
             }
             if (numberOfTurns > 0) {
@@ -121,21 +140,22 @@ async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlo
             } else {
                 board = fillBoard(filledSlots, indexSlots, board);
                 msg.channel.send(board + "\nYou have both tied!")
+                peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
             }
         });
 
     } catch (error) {
         console.log(error);
         msg.channel.send("Error occurred...")
-        return 1;
+        peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
     }
 }
 
 /**
- * Maing game loop for tic-tac-toe
+ * Setting up everything for tic-tac-toe
  * @private
- * @param {Array} players Contains both player's Discord IDs.
- * @param {Message} msg [Discord.js] Message object representation of message that kicked off game.
+ * @param {string[]} players Contains both player's Discord IDs.
+ * @param {object} msg [Discord.js] Message object representation of message that kicked off game.
  */
 function playTTT(players, msg) {
     let board = initTTT();
@@ -144,8 +164,8 @@ function playTTT(players, msg) {
     //[1],[2],...
     //[1]->[1,1]//[5]->[3,3]//[9]->[5,5]
     msg.channel.send("<@!" + rankings['first'][0] + "> has been randomly selected to go first and will be playing ❌");
-    let filledSlots = {1: null, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null}
-    let numToWord = {"1️⃣": 1, "2️⃣": 2, "3️⃣": 3, "4️⃣": 4, "5️⃣": 5, "6️⃣": 6, "7️⃣": 7, "8️⃣": 8, "9️⃣": 9}
+    let filledSlots = {1: null, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null, 9: null};
+    let numToWord = {"1️⃣": 1, "2️⃣": 2, "3️⃣": 3, "4️⃣": 4, "5️⃣": 5, "6️⃣": 6, "7️⃣": 7, "8️⃣": 8, "9️⃣": 9};
     let indexSlots = [0, 2, 4, 6, 8, 10, 12, 14, 16];
     let numberOfTurns = 9;
     let player;
@@ -155,12 +175,12 @@ function playTTT(players, msg) {
 
 /**
  * Checks input to determine if game inputted is relevant
- * @public
- * @param {String} gameName Name of game to be played.
- * @param {Array} players Contains both player's Discord IDs.
- * @param {Message} msg [Discord.js] Message object representation of message that kicked off game.
+ * @private
+ * @param {string} gameName Name of game to be played.
+ * @param {string[]} players Contains both player's Discord IDs.
+ * @param {object} msg [Discord.js] Message object representation of message that kicked off game.
  */
-const init = (gameName, players, msg) => {
+function init(gameName, players, msg) {
     responsesKeyPair = new Map([
         ["tictactoe", playTTT]
     ]);
@@ -171,4 +191,48 @@ const init = (gameName, players, msg) => {
     }
 }
 
-exports.init = init;
+/**
+ * Checks input from user regarding games that Drinkie can play and will attempt to play it.
+ * @private
+ * @param {object} msg Message object, generated based on message by user
+ */
+ const botGames = (msg) => {
+    let remainingArgs = msg.content.replace('!dpi game ', '');
+    //!dpi game tictactoe <user>
+
+    if (remainingArgs.startsWith("tictactoe <")) {
+        let player1 = msg.author.id;
+        let player2 = msg.mentions.users.first().id;
+        let gameState = false;
+        if (!peoplePlaying.find(person => { return person == player1 || person == player2 })) {
+            peoplePlaying.push(player1, player2);
+            msg.channel.send("<@!" + player1 + "> has issued a tic-tac-toe game with <@!" + player2 + ">. Do you accept this match? Y/N")
+            let player2Filter = m => m.author.id == player2
+            let collector = msg.channel.createMessageCollector(player2Filter, { time: 60000 });
+
+            collector.on('collect', m => {
+                if (m.content.toLowerCase() == "y") {
+                    gameState = true;
+                    collector.stop();
+                }
+                else if (m.content.toLowerCase() == "n") {
+                    collector.stop();
+                }
+            });
+
+            collector.on('end', m => {
+                if (gameState) {
+                    msg.channel.send("Matchup accepted!").then(() => init("tictactoe", [player1,player2], msg));
+                }
+                else {
+                    msg.channel.send("Matchup declined!");
+                    peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
+                }
+            });
+        } else {
+            msg.reply("Person is already active in game. Please wait for the game to finish.")
+        }
+    }
+}
+
+exports.botGames = botGames;
