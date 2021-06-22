@@ -81,6 +81,17 @@ function validate(filledSlots, symbol) {
     return false;
 }
 
+function removePlayer(player) {
+    let i = 0
+    while (i < peoplePlaying.length) {
+        if (peoplePlaying[i] == player) {
+            peoplePlaying.splice(peoplePlaying.indexOf(player), 1);
+        } else {
+            i++;
+        }
+    }
+}
+
 /**
  * Main game recursive loop for tic-tac-toe, does the following things ->
  * 1) Checks who's turn to play
@@ -132,7 +143,8 @@ async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlo
                 if (result) {
                     board = fillBoard(filledSlots, indexSlots, board);
                     msg.channel.send(board + "\nCongrats <@!" + player[0] + ">, you have won!");
-                    peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
+                    peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person).forEach(player => removePlayer(player));
+                    return 0;
                 }
             }
             if (numberOfTurns > 0) {
@@ -140,14 +152,16 @@ async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlo
             } else {
                 board = fillBoard(filledSlots, indexSlots, board);
                 msg.channel.send(board + "\nYou have both tied!")
-                peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
+                peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person).forEach(player => removePlayer(player));
+                return 0;
             }
         });
 
     } catch (error) {
         console.log(error);
         msg.channel.send("Error occurred...")
-        peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
+        peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person).forEach(player => removePlayer(player));
+        return 1;
     }
 }
 
@@ -206,7 +220,11 @@ function init(gameName, players, msg) {
         let gameState = false;
         if (!peoplePlaying.find(person => { return person == player1 || person == player2 })) {
             peoplePlaying.push(player1, player2);
-            msg.channel.send("<@!" + player1 + "> has issued a tic-tac-toe game with <@!" + player2 + ">. Do you accept this match? Y/N")
+            if (player1 === player2) {
+                msg.channel.send("<@!" + player1 + "> wants to play with themselves apparently...are you sure you want this match? Y/N")
+            } else {
+                msg.channel.send("<@!" + player1 + "> has issued a tic-tac-toe game with <@!" + player2 + ">. Do you accept this match? Y/N")
+            }
             let player2Filter = m => m.author.id == player2
             let collector = msg.channel.createMessageCollector(player2Filter, { time: 60000 });
 
@@ -226,7 +244,7 @@ function init(gameName, players, msg) {
                 }
                 else {
                     msg.channel.send("Matchup declined!");
-                    peoplePlaying = peoplePlaying.filter(person => rankings['first'][0] == person || rankings['second'][0] == person);
+                    peoplePlaying.filter(person => player1 == person || player2 == person).forEach(player => removePlayer(player));
                 }
             });
         } else {
