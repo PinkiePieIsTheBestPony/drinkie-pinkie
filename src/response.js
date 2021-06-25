@@ -145,11 +145,15 @@ function botSource(msg) {
 function botPredict(msg) {
     let remainingArgs = msg.content.replace('!dpi predict ', '');
     if (remainingArgs.substring(0, 2) === "''") {
-        let splitMsg = remainingArgs.split("''")
-        let matchups = splitMsg[2].trim().split(",");
-        msg.reply("Question: `" + splitMsg[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[talk.randomNumber(0, matchups.length)].trim() + "`");
+        let splitMsg = remainingArgs.split("''");
+        if (splitMsg[2] !== undefined) {
+            let matchups = splitMsg[2].trim().split(",");
+            msg.reply("Question: `" + splitMsg[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[talk.randomNumber(0, matchups.length)].trim() + "`");
+        } else {
+            msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+        }
     } else {
-        msg.reply("Invalid syntax.")
+        msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
     }
 }
 
