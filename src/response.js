@@ -130,13 +130,18 @@ function botSettingsEdit(msg) {
 
 /**
  * Posts a response linking to the GitHub page for this bot. (very meta!!)
- * @public
+ * @private
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
 function botSource(msg) {
     msg.reply("Here is the GitHub link! https://github.com/PinkiePieIsTheBestPony/drinkie-pinkie")
 }
 
+/**
+ * Interesting algorithm which will take n arguments, and will assign each argument a random percentage value
+ * @param {number} length Length of below array
+ * @param {object} array Array that contains all the different arguments
+ */
 function randomStuff(length, array) {
     let totalRandom = 0;
     let arrayOfValues = [];
@@ -200,6 +205,9 @@ function botPredict(msg) {
                 msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
             }
             break;
+        }
+        default: {
+            msg.reply("You have not selected a prediction mode! Choose between the following: `option, percentage, percentage-multiple`");
         }
     }
 }
