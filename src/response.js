@@ -137,6 +137,21 @@ function botSource(msg) {
     msg.reply("Here is the GitHub link! https://github.com/PinkiePieIsTheBestPony/drinkie-pinkie")
 }
 
+function randomStuff(length, array) {
+    let totalRandom = 0;
+    let arrayOfValues = [];
+    for (let i = 0; i < length; i++) {
+        let num = talk.randomNumber(0, 101);
+        totalRandom += num;
+        arrayOfValues.push(num / length);
+    }
+    let c = ((length * 100) - totalRandom) / length / length;
+    for (let j = 0; j < length; j++) {
+        arrayOfValues[j] += c
+    }
+    return array.map((x, y) => "- " + x.trim() + ": " + +arrayOfValues[y].toFixed(3) + "%\n" )
+}
+
 /**
  * Checks input for a message and a variable number of options, and will return a message which will choice from one of these options.
  * @public
@@ -144,16 +159,48 @@ function botSource(msg) {
  */
 function botPredict(msg) {
     let remainingArgs = msg.content.replace('!dpi predict ', '');
-    if (remainingArgs.substring(0, 2) === "''") {
-        let splitMsg = remainingArgs.split("''");
-        if (splitMsg[2] !== undefined) {
-            let matchups = splitMsg[2].trim().split(",");
-            msg.reply("Question: `" + splitMsg[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[talk.randomNumber(0, matchups.length)].trim() + "`");
-        } else {
-            msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+    let splitArgs = remainingArgs.trim().split(' ');
+    let removedArgs = splitArgs.slice(1).join(' ').split("''");
+    switch (splitArgs[0]) {
+        case 'percentage': {
+            if (splitArgs[1].substr(0, 2) === "''") {
+                if (removedArgs[1] !== undefined) {
+                    msg.reply("Question: `" + removedArgs[1] + "`\n Drinkie has estimated there is a " + talk.randomNumber(0, 101) + "% chance of that happening!" )
+                } else {
+                    msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+                }
+            } else {
+                msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
+            }
+            break;
         }
-    } else {
-        msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
+        case 'percentage-multiple': {
+            if (splitArgs[1].substr(0, 2) === "''") {
+                if (removedArgs[2] !== undefined) {
+                    let matchups = removedArgs[2].trim().split(",");
+                    let arrayPercentages = randomStuff(matchups.length, matchups);
+                    msg.reply("Question: `" + removedArgs[1] + "`\n Each of your options will be presented with a percentage:\n" + arrayPercentages.join(''))
+                } else {
+                    msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+                }
+            } else {
+                msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
+            }
+            break;
+        }
+        case 'option': {
+            if (splitArgs[1].substr(0, 2) === "''") {
+                if (removedArgs[2] !== undefined) {
+                    let matchups = removedArgs[2].trim().split(",");
+                    msg.reply("Question: `" + removedArgs[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[talk.randomNumber(0, matchups.length)].trim() + "`");
+                } else {
+                    msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+                }
+            } else {
+                msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
+            }
+            break;
+        }
     }
 }
 
