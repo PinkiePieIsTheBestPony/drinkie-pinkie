@@ -118,7 +118,7 @@ const insertGuildDetails = (guild) => {
     pRotation = "0 0/6 * * *";
 
     insertStatementDB("p_server(server_id, server_name)", guild.id, guild.name);
-    insertStatementDB("p_queries(search_query, server_id, server_query_id)", pQuery, guild.id, 0);
+    insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", pQuery, 'noChannelFoundForDrinkie', guild.id, 0);
     insertStatementDB("p_rotation(rotation, server_id, server_query_id)", pRotation, guild.id, 0);
 }
 
