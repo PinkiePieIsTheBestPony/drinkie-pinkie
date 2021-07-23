@@ -1,3 +1,4 @@
+const { DataResolver } = require('discord.js');
 const jsonRead = require('./json/jsonReader.js');
 
 /**
@@ -13,6 +14,11 @@ function ponkJSONLookup(searchType, searchValue, msg) {
         let d = new Date("2019-08-12");
         d.setDate(d.getDate() + parseInt(searchValue));
         searchValue = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();  
+    } else if (searchValue.includes("-")) {
+        let d = new Date(searchValue);
+        searchValue = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+    } else {
+        msg.reply("Invalid input found...")
     }
     let jsonResult = fileJSON["drinkiepic"][searchType][searchValue];
     msg.reply(jsonResult["link"]);
@@ -35,60 +41,72 @@ const botPonkSearch = (msg) => {
                 let dateDri = new Date(driValString);
                 const firstDay = new Date("2019-08-13")
                 const lastDay = new Date("2020-08-12");
-                const bonusDays = [new Date("2019-10-11"), new Date("2019-10-12"), new Date("2019-10-31"), new Date("2019-11-02"), new Date("2019-11-08"), new Date("2019-11-09"), new Date("2019-28-10"), new Date("2020-03-21")] 
+                const bonusDays = [new Date("2019-10-11"), new Date("2019-10-12"), new Date("2019-10-28"), new Date("2019-10-31"), new Date("2019-11-02"), new Date("2019-11-08"), new Date("2019-11-09"), new Date("2020-03-21")] 
                 if (firstDay <= dateDri && lastDay >= dateDri) {
                     if (Boolean(+dateDri) && dateDri.getFullYear() == splitVals[0] && driValType == "day") {
                         ponkJSONLookup(driValType, driValString, msg);
                     }
-                    else if (driValType == "bonuses" && bonusDays.find(bonusDay => { return bonusDay.getTime() == dateDri.getTime() })) {
-                        ponkJSONLookup(driValType, driValString, msg);
+                    else if (driValType == "bonuses") {
+                        if (bonusDays.find(bonusDay => { return bonusDay.getTime() == dateDri.getTime() })) {
+                            ponkJSONLookup(driValType, driValString, msg);
+                        }
+                        else {
+                            let dates = bonusDays.map(day => " " + day.getFullYear() + "-" + (day.getMonth() + 1) + "-" + day.getDate())
+                            msg.reply("Invalid date range... Bonus dates must be the following days: " + dates);
+                        }
                     }
                     else {
-                        msg.reply("Invalid date range...")
+                        msg.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
                     }
                 }
                 else {
-                    msg.reply("Invalid date range...")
+                    msg.reply("Invalid date range... Please enter date between 2019-08-13 & 2020-08-12")
                 }
             }
             else {
-                msg.reply("Invalid date...")
+                msg.reply("Invalid date... Please enter date between 2019-08-13 & 2020-08-12")
             }
         }
         else if (driValString == "random") {
             let indexDri;
             if (driValType == "day") {
                 indexDri = Math.floor(Math.random() * 366 + 1);
-                ponkJSONLookup(driValType, indexDri, msg);
+                ponkJSONLookup(driValType, indexDri.toString(), msg);
             } else if (driValType == "bonuses") {
                 indexDri = Math.floor(Math.random() * 8);
                 const vals = [60, 61, 77, 80, 82, 88, 89, 222];
                 indexDri = vals[indexDri];
-                ponkJSONLookup(driValType, indexDri, msg);
+                ponkJSONLookup(driValType, indexDri.toString(), msg);
             } else {
-                msg.reply("Invalid type of value!")
+                msg.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
             }
         } 
-        else {
-            if (!isNaN(driValString)) {
-                const vals = [60, 61, 77, 80, 82, 88, 89, 222];
-                if (driValString <= 366 && driValType == "day") {
+        else if (!isNaN(driValString)) {
+            const vals = [60, 61, 77, 80, 82, 88, 89, 222];
+            if (driValType == "day") {
+                if (driValString <= 366) {
                     ponkJSONLookup(driValType, driValString, msg);
+                } else {
+                    msg.reply("Invalid index number! Valid value is between 1 and 366.")
                 }
-                else if (vals.indexOf(parseInt(driValString)) != -1 && driValType == "bonuses") {
+            }
+            else if (driValType == "bonuses") {
+                if (vals.indexOf(parseInt(driValString)) != -1) {
                     ponkJSONLookup(driValType, driValString, msg);
-                }
-                else {
-                    msg.reply("Invalid index number!")
+                } else {
+                    msg.reply("Invalid index number! Valid values are `" + vals + "`")
                 }
             }
             else {
-                msg.reply("Number you have entered is not a number!")
+                msg.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
             }
+        }
+        else {
+            msg.reply("`" + driValType + " " + driValString + "<-` Value argument you have entered is not valid! Here is the following valid values: `date[ex.2019-10-31], index[ex.69], random`")
         }
     }
     else {
-        msg.reply("Number of arguments is wrong!")
+        msg.reply("Number of arguments is wrong! You should have the following arguments - type:`day|bonuses` & value:`date[ex.2019-10-31]|index[ex.69]|random`")
     }
 }
 
