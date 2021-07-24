@@ -212,6 +212,38 @@ function botPredict(msg) {
     }
 }
 
+function botBroadcast(msg, client) {
+    if (msg.channel.type === "dm") {
+        if (msg.author.id === "113460834692268032") {
+            let remainingArgs = msg.content.replace('!dpi broadcast ', '');
+            let serverType = remainingArgs.trim().split(' ')[0];
+            let message = remainingArgs.substr(remainingArgs.indexOf(' ')+1);
+            if (serverType === "all") {
+                post.send(null, false, null, client, message, null, null)
+            } else if (/\d/.test(serverType)) {
+                let servers = serverType.split(',');
+                let server = client.guilds.cache.array().filter((guild) => {
+                    for (let i = 0; i < servers.length; i++) {
+                        let server = servers[i];
+                        if (guild.id === server) {
+                            return guild.id;
+                        }
+                    }
+                });
+                if (server.length > 0) {
+                    post.send(null, false, null, client, message, server, null)
+                } else {
+                    msg.reply("Invalid input.")
+                }
+            } else {
+                msg.reply("Invalid input.")
+            }
+        } else {
+            msg.reply("Not authorised!");
+        }
+    }
+}
+
 /**
  * Checks input from user regarding commands for Drinkie and will call relevant function
  * @public
@@ -227,7 +259,8 @@ const possibleResponses = (msg, client) => {
         ["!dpi game ", game.botGames],
         ["!dpi dailyponk ", dailyponk.botPonkSearch],
         ["!dpi source ", botSource],
-        ["!dpi predict ", botPredict]
+        ["!dpi predict ", botPredict],
+        ["!dpi broadcast ", botBroadcast]
     ]);
 
     if (msg.mentions.has(client.user)) {

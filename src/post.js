@@ -11,18 +11,18 @@ const discord = require('./external-libs/discord');
  * @param {string} serverID The specific ID of the Server in which the bot is sending the image to, so it only sends to that server (in most cases).
  */
 const send = (derpiObject, isRequest, messageObject, client, message, serverID, channelQueryForServer) => {
-    if (channelQueryForServer != null) {
-        if (!isRequest && messageObject == null && serverID != null) {
-            client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({message: message, embed: discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])});
-        }
-        else {
-            client.guilds.cache.array().forEach(guild => guild.channels.cache.find(channel => channel.name.includes("bot")).send(message, attachment));
+    if (channelQueryForServer != null && !isRequest && messageObject == null && serverID != null) {
+        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({message: message, embed: discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])});   
+    } else if (isRequest == false && channelQueryForServer == null && derpiObject == null) {
+        if (serverID != null) {
+            serverID.forEach(guild => guild.channels.cache.find(channel => channel.name.includes("bot")).send(message));
+        } else {
+            client.guilds.cache.array().forEach(guild => guild.channels.cache.find(channel => channel.name.includes("bot")).send(message));
         }
     } else {
         messageObject.reply("Result of your query: `" + messageObject.content.split(' ').slice(2).join(' ') + "`", discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"]));
         messageObject.channel.stopTyping();
     }
-    
 }
 
 exports.send = send;
