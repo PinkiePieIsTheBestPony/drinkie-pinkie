@@ -1,3 +1,5 @@
+const { prefix } = require('./config');
+
 var peoplePlaying = [];
 
 /**
@@ -211,7 +213,7 @@ function init(gameName, players, msg) {
  * @param {object} msg Message object, generated based on message by user
  */
  const botGames = (msg) => {
-    let remainingArgs = msg.content.replace('!dpi game ', '');
+    let remainingArgs = msg.content.replace(prefix + ' game ', '');
     //!dpi game tictactoe <user>
 
     if (remainingArgs.startsWith("tictactoe <")) {

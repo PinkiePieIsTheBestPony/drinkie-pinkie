@@ -112,7 +112,7 @@ const decision = (userNum, botNum, msg) => {
                     //promptNum = randomNumber(1, numOfResp);
                     promptNum = randomNumber(1, a)
                     let indexPromptNum = jsonDBArrayResp[0][a];
-                    let authorID = dbQuery.selectAllStatementDB("submitted_by", "p_prompts", "query_id", "=", indexPromptNum);
+                    let authorID = dbQuery.selectAllStatementDB("submitted_by", "p_prompts", ["query_id"], "=", [indexPromptNum]);
                     msg.reply(response + "The number that you said or generated was the same as mine! Here is your random prompt: \"" + sentMsg[promptNum] + "\" which was provided by: <@!" + authorID + ">");
                 }
                 else {
