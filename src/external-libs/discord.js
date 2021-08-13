@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const reader = require('../json/jsonReader');
-const derpi = require('./derpi');
+const derpi = require('./derpi.js');
 
 /**
  * Initialise Drinkie

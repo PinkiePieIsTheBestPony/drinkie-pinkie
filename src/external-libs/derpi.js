@@ -1,5 +1,5 @@
-const dinky = require('dinky.js');
-const { derpi_key } = require('../config');
+const { Search } = require('dinky.js');
+const { derpi_key, prefix } = require('../config');
 
 /**
  * Shortcut function which takes a command and strips it for the neccessary data and turns it into an array
@@ -45,29 +45,29 @@ const getArtistDetails = (tagsArray) => {
  * Does an API call to Derpibooru and grabs a random image
  * @public
  * @param {object} message [Discord.js] Message object, generated based on message by user
+ * @param {string} filter ID corresponding to derpi filter system, for blocking particular tags
  * @param {boolean} isNSFW Checks if channel the command is posted in is NSFW.
  */
-const getDerpibooruImage = (message, isNSFW) => {
+const getDerpibooruImage = async (message, filter, isNSFW) => {
     let tagList = [];
-    if (message == null) {
+    message = message.replace(prefix + ' img ', '');
+    if (filter === null) {
+        const regx = /filter_id:([0-9]{1,})/
+        let expr = message.split(" ")[0];
+        if (regx.test(expr)) {
+            filter = regx.exec(expr)[1]
+            message = message.substr(message.indexOf(" ") + 1);
+        } else {
+            filter = '';
+        }
+    } 
+    if (message == null || message.includes(prefix + " img")) {
         tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:100"];
-    }
-    else if (message.includes("!dpi img")) {
-        tagList = getArguments(message, '!dpi img ');
     }
     else {
         tagList = getArguments(message, '');
     }
     if (isNSFW) {
-        if (!tagList.includes("suggestive") && !tagList.includes("questionable") && !tagList.includes("explicit")) {
-            if (Math.random() < 0.33) {
-                tagList.push("suggestive");
-            } else if (Math.random() < 0.66) {
-                tagList.push("questionable");
-            } else {
-                tagList.push("explicit");
-            }
-        }
         for (let i = 0; i < tagList.length; i++) {
             if (tagList[i].includes("safe")) {
                 tagList.splice(i, 1);
@@ -80,20 +80,32 @@ const getDerpibooruImage = (message, isNSFW) => {
                 }
             }
         }
+        if (!tagList.includes("suggestive") && !tagList.includes("questionable") && !tagList.includes("explicit")) {
+            if (Math.random() < 0.33) {
+                tagList.push("suggestive");
+            } else if (Math.random() < 0.66) {
+                tagList.push("questionable");
+            } else {
+                tagList.push("explicit");
+            }
+        }
     }
     else {
-        if (!tagList.includes("safe")) {
-            tagList.push("safe");
-        }
         for (let i = 0; i < tagList.length; i++) {
-            if (tagList[i].includes("explicit") || tagList[i].includes("questionable") || tagList.includes("suggestive")) {
+            if (tagList[i].includes("explicit") && tagList[i].includes("questionable") && tagList.includes("suggestive")) {
                 tagList.splice(i, 1);
                 tagList.push("safe");
             }
         }
+        if (!tagList.includes("safe")) {
+            tagList.push("safe");
+        }
     }
     
-    return dinky({key: derpi_key}).search(tagList).random().limit(1);
+    const search = new Search({url: "https://derpibooru.org", linkOptions: {key: derpi_key}});
+    search.query(tagList).random().limit(1);
+    let resp = await search.exec({filter: filter})
+    return resp.images[0];
 }
 
 const getDerpibooruImageID = (id) => {
