@@ -1,12 +1,12 @@
 const discord = require('./external-libs/discord');
-const derpi = require('./external-libs/derpi');
+const derpi = require('./external-libs/derpi.js');
 const initDB = require('./db/initDB');
 const dbQueries = require('./db/dbQuery');
 const cron = require('./cron');
 const responses = require('./response');
 const nodeCron = require('cron');
 const post = require('./post');
-const { discord_key } = require('./config');
+const { discord_key, prefix } = require('./config');
 
 /**
  * Initialises Drinkie client user, along with the DB and Twitter connectivity.
@@ -25,16 +25,16 @@ client.login(discord_key);
  * 4) Connect to Derpi and run query, fetch image from query and post to relevant server.
  */
 client.on('ready', () => {
-    client.user.setActivity('!dpi help');
+    client.user.setActivity(prefix + ' help');
     client.guilds.cache.array().forEach(guild => {
-        let response = dbQueries.selectAllStatementDB("server_id", "p_server", "server_id", "=", guild.id);
+        let response = dbQueries.selectAllStatementDB("server_id", "p_server", ["server_id"], "=", [guild.id]);
         if (response !== guild.id) {
             dbQueries.insertGuildDetails(guild);
         }
     });
     nodeCron.job(
         '0 * * * * *',
-        function() {
+        async function() {
             let allRotationsForServers = dbQueries.selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
             if (allRotationsForServers != '') {
                 let allRotationsForServersArray = allRotationsForServers.split('\n');
@@ -43,15 +43,21 @@ client.on('ready', () => {
                     let rotationQuery = resultArray[1];
                     let rotationServerID = resultArray[2];
                     let serverID = resultArray[3];
-                    let channelQueryForServer = dbQueries.selectAllStatementDB("channel_name", "p_queries", "server_query_id, server_id", "=", [rotationServerID, serverID]);
+                    let channelQueryForServer = dbQueries.selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
                     if (channelQueryForServer !== "noChannelFoundForDrinkie") {
                         if (cron.cronChecker(rotationQuery)) {
-                            let queryForServer = dbQueries.selectAllStatementDB("search_query", "p_queries", "server_query_id, server_id", "=", [rotationServerID, serverID]);
-                            derpi.getDerpibooruImage(queryForServer, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw).then(({images}) => {
-                                if (Array.isArray(images) && images.length) {
-                                    post.send(images[0], false, null, client, '', serverID, channelQueryForServer);
+                            let query = dbQueries.selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+                            let filter = dbQueries.selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+                            try {
+                                let imageReturned = await derpi.getDerpibooruImage(query, filter, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
+                                if (imageReturned !== undefined) {
+                                    post.send(imageReturned, false, null, client, '', serverID, channelQueryForServer);
+                                } else {
+                                    client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
                                 }
-                            });
+                            } catch (error) {
+                                console.error(error);
+                            }
                         }
                     }
                 }
