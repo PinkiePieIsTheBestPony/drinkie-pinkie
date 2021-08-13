@@ -1,5 +1,5 @@
-const { DataResolver } = require('discord.js');
 const jsonRead = require('./json/jsonReader.js');
+const {prefix} = require('./config');
 
 /**
  * Reads JSON file which contains all the information regarding https://twitter.com/KurogeWaPony daily ponk image posting. Replies with the relevant image.
@@ -30,7 +30,7 @@ function ponkJSONLookup(searchType, searchValue, msg) {
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
 const botPonkSearch = (msg) => {
-    let driValQuery = msg.content.replace('!dpi dailyponk ', '');
+    let driValQuery = msg.content.replace(prefix + ' dailyponk ', '');
     let driValArr = driValQuery.split(" ");
     if (driValArr.length == 2) {
         let driValType = driValArr[0];
