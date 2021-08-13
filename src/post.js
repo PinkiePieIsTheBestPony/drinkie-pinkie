@@ -1,4 +1,5 @@
 const discord = require('./external-libs/discord');
+const dbQuery = require('./db/dbQuery');
 
 /**
  * Where all posts which either require an image attached, or contain a Derpibooru request are posted (including the scheduled posts).
@@ -15,9 +16,9 @@ const send = (derpiObject, isRequest, messageObject, client, message, serverID, 
         client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({message: message, embed: discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])});   
     } else if (isRequest == false && channelQueryForServer == null && derpiObject == null) {
         if (serverID != null) {
-            serverID.forEach(guild => guild.channels.cache.find(channel => channel.name.includes("bot")).send(message));
+            serverID.forEach(guild => guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_servers", ["server_id"], "=", [msg.guild.id])).send(message));
         } else {
-            client.guilds.cache.array().forEach(guild => guild.channels.cache.find(channel => channel.name.includes("bot")).send(message));
+            client.guilds.cache.array().forEach(guild => guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_servers", ["server_id"], "=", [msg.guild.id])).send(message));
         }
     } else {
         messageObject.reply("Result of your query: `" + messageObject.content.split(' ').slice(2).join(' ') + "`", discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"]));
