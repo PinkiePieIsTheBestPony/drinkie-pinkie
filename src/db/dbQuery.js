@@ -25,25 +25,15 @@ const insertStatementDB = (insertTable, ...dbArgs) => {
  */
 const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, whereAnswer) => {
     let allResults = '';
-    let whereArray = '';
+    let statement = '';
     let columnArray = selectColumns.split(", ");
-
-    if (whereColumn != null) {
-        whereArray = whereColumn.split(", ");
-    }
     
     let dbCon = db.dbConnect();
-    let dbResults = '';
-    
-    if (whereArray.length == 1) {
-        dbResults = dbCon.querySync("SELECT " + selectColumns + " FROM " + table + " WHERE " + whereColumn + " " + equalsTo + " $1", [whereAnswer])
+
+    if (whereColumn != null) {
+        statement = ' WHERE ' + whereColumn.map((column, i) => i === 0 || column.length === 1 ? `${column} ${equalsTo} $${i+1} ` : `AND ${column} ${equalsTo} $${i+1}`).join("")
     }
-    else if (whereColumn != null) {
-        dbResults = dbCon.querySync("SELECT " + selectColumns + " FROM " + table + " WHERE " + whereArray[0] + " " + equalsTo + " $1 AND " + whereArray[1] + " " + equalsTo + " $2", [whereAnswer[0], whereAnswer[1]])
-    }
-    else {
-        dbResults = dbCon.querySync("SELECT " + selectColumns + " FROM " + table);
-    }
+    let dbResults = dbCon.querySync(`SELECT ${selectColumns} FROM ${table}${statement}`, whereAnswer)
 
     dbCon.end();
 
@@ -117,7 +107,7 @@ const insertGuildDetails = (guild) => {
     pQuery = "pinkie pie, safe, solo, !webm, score.gte:100";
     pRotation = "0 0/6 * * *";
 
-    insertStatementDB("p_server(server_id, server_name)", guild.id, guild.name);
+    insertStatementDB("p_server(server_id, server_name, default_channel)", guild.id, guild.name, 'noChannelFoundForDrinkie');
     insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", pQuery, 'noChannelFoundForDrinkie', guild.id, 0);
     insertStatementDB("p_rotation(rotation, server_id, server_query_id)", pRotation, guild.id, 0);
 }
