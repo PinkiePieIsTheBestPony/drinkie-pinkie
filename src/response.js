@@ -1,10 +1,11 @@
 const discord = require('./external-libs/discord.js')
-const derpi = require('./external-libs/derpi');
+const derpi = require('./external-libs/derpi.js');
 const post = require('./post');
 const game = require('./games');
 const talk = require('./talk');
 const dailyponk = require('./dailyponk');
 const rotationQuery = require('./rotationQuery');
+const { prefix } = require('./config');
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -51,26 +52,27 @@ function botMessage(msg, client) {
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  * @param {object} client [Discord.js] Client object, this represents Drinkie on the server where the message was sent
  */
-function botGetImg(msg, client) {
+async function botGetImg(msg, client) {
     msg.channel.startTyping();
     if (msg.content.includes("/") || msg.content.includes("\\") || msg.content.includes(";")) {
         msg.reply("GO AWAY")
     }
     else {
-        derpi.getDerpibooruImage(msg.content, msg.channel.nsfw).then(({images}) => {
-            if (Array.isArray(images) && images.length) {
-                post.send(images[0], true, msg, client, '', null, null);
+        try {
+            let returnedImage = await derpi.getDerpibooruImage(msg.content, null, msg.channel.nsfw)
+            if (returnedImage !== undefined) {
+                post.send(returnedImage, true, msg, client, '', null, null);
             }
             else {
                 msg.reply("Your query did not yield any results.");
             }
-        }).catch(({response}) => {
+        } catch (response) {
             if (response == undefined) {
                 msg.channel.send("Unknown error...")
             } else {
                 msg.channel.send("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
             }
-        });
+        }
     }
     msg.channel.stopTyping();
 }
@@ -90,7 +92,7 @@ function botGetHelp(msg) {
  * @param {object} msg Message object, generated based on message by user
  */
 function botGetRndNum(msg) {
-    let number = msg.content.replace('!dpi random ', '');
+    let number = msg.content.replace(prefix + ' random ', '');
     if (!isNaN(number)) {
         if (number >= 1 && number <= 10) {
             botNum = talk.randomNumber(1, 10);
@@ -119,12 +121,14 @@ function botSettingsEdit(msg) {
         ["query list", rotationQuery.queryList],
         ["query remove", rotationQuery.queryRemove],
         ["query edit", rotationQuery.queryEdit],
-        ["channel edit", rotationQuery.channelEdit]
+        ["channel edit", rotationQuery.channelEdit],
+        ["channelDefault edit", rotationQuery.channelDefaultEdit],
+        ["filter edit", rotationQuery.filterEdit]
     ]);
 
     let functionName = settingsKeyPair.get(msg.content.split(' ').slice(2, 4).join(' '));
     if (functionName) {
-        functionName(msg)
+        functionName(msg);
     }
 }
 
@@ -163,7 +167,7 @@ function randomStuff(length, array) {
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
 function botPredict(msg) {
-    let remainingArgs = msg.content.replace('!dpi predict ', '');
+    let remainingArgs = msg.content.replace(prefix + ' predict ', '');
     let splitArgs = remainingArgs.trim().split(' ');
     let removedArgs = splitArgs.slice(1).join(' ').split("''");
     switch (splitArgs[0]) {
@@ -215,7 +219,7 @@ function botPredict(msg) {
 function botBroadcast(msg, client) {
     if (msg.channel.type === "dm") {
         if (msg.author.id === "113460834692268032") {
-            let remainingArgs = msg.content.replace('!dpi broadcast ', '');
+            let remainingArgs = msg.content.replace(prefix + ' broadcast ', '');
             let serverType = remainingArgs.trim().split(' ')[0];
             let message = remainingArgs.substr(remainingArgs.indexOf(' ')+1);
             if (serverType === "all") {
@@ -251,16 +255,16 @@ function botBroadcast(msg, client) {
  */
 const possibleResponses = (msg, client) => {
     responsesKeyPair = new Map([
-        ["!dpi msg ", botMessage],
-        ["!dpi img ", botGetImg],
-        ["!dpi help ", botGetHelp],
-        ["!dpi random ", botGetRndNum],
-        ["!dpi settings ", botSettingsEdit],
-        ["!dpi game ", game.botGames],
-        ["!dpi dailyponk ", dailyponk.botPonkSearch],
-        ["!dpi source ", botSource],
-        ["!dpi predict ", botPredict],
-        ["!dpi broadcast ", botBroadcast]
+        [prefix + " msg ", botMessage],
+        [prefix + " img ", botGetImg],
+        [prefix + " help ", botGetHelp],
+        [prefix + " random ", botGetRndNum],
+        [prefix + " settings ", botSettingsEdit],
+        [prefix + " game ", game.botGames],
+        [prefix + " dailyponk ", dailyponk.botPonkSearch],
+        [prefix + " source ", botSource],
+        [prefix + " predict ", botPredict],
+        [prefix + " broadcast ", botBroadcast]
     ]);
 
     if (msg.mentions.has(client.user)) {
