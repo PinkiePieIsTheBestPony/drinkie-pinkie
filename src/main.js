@@ -16,6 +16,36 @@ initDB.initialiseDB();
 
 client.login(discord_key);
 
+async function autoPostLoop(client) {
+    let allRotationsForServers = dbQueries.selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
+    if (allRotationsForServers != '') {
+        let allRotationsForServersArray = allRotationsForServers.split('\n');
+        for (let i = 0; i < allRotationsForServersArray.length; i++) {
+            let resultArray = allRotationsForServersArray[i].split(', ');
+            let rotationQuery = resultArray[1];
+            let rotationServerID = resultArray[2];
+            let serverID = resultArray[3];
+            let channelQueryForServer = dbQueries.selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+            if (channelQueryForServer !== "noChannelFoundForDrinkie") {
+                if (cron.cronChecker(rotationQuery)) {
+                    let query = dbQueries.selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+                    let filter = dbQueries.selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+                    try {
+                        let imageReturned = await derpi.getDerpibooruImage(query, filter, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
+                        if (imageReturned !== undefined) {
+                            post.send(imageReturned, false, null, client, '', serverID, channelQueryForServer);
+                        } else {
+                            client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            }
+        }
+    }
+}
+
 /**
  * When initialisation finishes - queries every server/guild Drinkie is in and ensures that there is a corresponding entry in DB. If not, will add that server/guild in.
  * Cron job will run every minute, running the following set of steps:
@@ -34,33 +64,11 @@ client.on('ready', () => {
     });
     nodeCron.job(
         '0 * * * * *',
-        async function() {
-            let allRotationsForServers = dbQueries.selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
-            if (allRotationsForServers != '') {
-                let allRotationsForServersArray = allRotationsForServers.split('\n');
-                for (i = 0; i < allRotationsForServersArray.length; i++) {
-                    let resultArray = allRotationsForServersArray[i].split(', ');
-                    let rotationQuery = resultArray[1];
-                    let rotationServerID = resultArray[2];
-                    let serverID = resultArray[3];
-                    let channelQueryForServer = dbQueries.selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
-                    if (channelQueryForServer !== "noChannelFoundForDrinkie") {
-                        if (cron.cronChecker(rotationQuery)) {
-                            let query = dbQueries.selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
-                            let filter = dbQueries.selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
-                            try {
-                                let imageReturned = await derpi.getDerpibooruImage(query, filter, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
-                                if (imageReturned !== undefined) {
-                                    post.send(imageReturned, false, null, client, '', serverID, channelQueryForServer);
-                                } else {
-                                    client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
-                                }
-                            } catch (error) {
-                                console.error(error);
-                            }
-                        }
-                    }
-                }
+        function() {
+            let numberOfIterations = 0;
+            if (numberOfIterations < 1) {
+                autoPostLoop(client);
+                numberOfIterations++;
             }
         },
         null,
