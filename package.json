@@ -1,7 +1,11 @@
 {
-  "name": "kuroge-wa-pony_bot",
-  "version": "1.0.0",
-  "description": "",
+  "name": "drinkie-pinkie",
+  "version": "0.1",
+  "description": "A fun bot :)",
+  "engines": {
+    "node": "16.x",
+    "npm": "7.x"
+  },
   "main": "post.js",
   "scripts": {
     "start": "node src/main.js",
