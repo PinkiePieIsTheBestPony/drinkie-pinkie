@@ -9,13 +9,13 @@ const { prefix } = require('./config');
  */
  const randomEdit = (msg) => {
     if (msg.member.hasPermission('ADMINISTRATOR')) {
-        let remainingArguments = msg.content.replace(prefix + ' settings random ', '');
+        //let remainingArguments = msg.content.replace(prefix + ' settings random ', '');
         let numberEnforce = remainingArguments.split(" ")[0];
         let userID = msg.mentions.users.first().id;
         dbQuery.updateStatementDB("p_guesses", "cooldown_time", ["user_id"], [numberEnforce, "user_id", userID]);
-        msg.reply("I have changed the cooldown period for <@!" + userID + "> to " + numberEnforce + " hours.");
+        msg.type.reply("I have changed the cooldown period for <@!" + userID + "> to " + numberEnforce + " hours.");
     } else {
-        msg.reply("You are not an admin!")
+        msg.type.reply("You are not an admin!")
     }
 }
 
@@ -25,27 +25,28 @@ const { prefix } = require('./config');
  * @param {object} msg Message object, generated based on message by user
  */
 const rotationEdit = (msg) => {
-    let remainingArguments = msg.content.replace(prefix + ' settings rotation edit ', '');
-    let number = remainingArguments.substr(0, remainingArguments.indexOf(" "));
-    let cronArguments = remainingArguments.substr(remainingArguments.indexOf(" ") + 1);
+    console.log(msg.content);
+    //let remainingArguments = msg.content.replace(prefix + ' settings rotation edit ', '');
+    let number = msg.content.substr(0, msg.content.indexOf(" "));
+    let cronArguments = msg.content.substr(msg.content.indexOf(" ") + 1);
     if (!isNaN(parseInt(number))) {
         let queryID = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (queryID !== '') {
             cronStatus = cron.cronValidator(cronArguments);
             if (cronStatus) {
                 dbQuery.updateStatementDB("p_rotation", "rotation", ["server_id", "server_query_id"], [cronArguments, msg.guild.id, number]);
-                msg.reply(cronStatus);
+                msg.type.reply(cronStatus);
             }
             else {
-                msg.reply("Invalid rotation syntax...")
+                msg.type.reply("Invalid rotation syntax...")
             }
         }
         else {
-            msg.reply("Rotation ID cannot be found.")
+            msg.type.reply("Rotation ID cannot be found.")
         }
     }
     else {
-        msg.reply("ID is not a valid number, or wrong number of arguments found.")
+        msg.type.reply("ID is not a valid number, or wrong number of arguments found.")
     }
 }
 
@@ -69,7 +70,7 @@ const rotationList = (msg) => {
         }
     }
 
-    msg.channel.send(messageResponse);
+    msg.type.reply({content: messageResponse});
 }
 
 /**
@@ -78,17 +79,16 @@ const rotationList = (msg) => {
  * @param {object} msg Message object, generated based on message by user
  */
 const queryNew = (msg) => {
-    let query = msg.content.replace(prefix + ' settings query new ', '');
+    let query = msg.content;
     let filter = null;
     const regx = /filter_id:([0-9]{1,})/
-    let expr = query.split(" ")[0];
+    let expr = msg.content.split(" ")[0];
     if (regx.test(expr)) {
         filter = regx.exec(expr)[1]
-        query = query.substr(query.indexOf(" ") + 1);
+        query = msg.content.substr(msg.content.indexOf(" ") + 1);
     } 
 
     let maxNumber = dbQuery.selectAllStatementDB("MAX(server_query_id)", "p_queries", ["server_id"], "=", [msg.guild.id]);
-    //let botChannel = msg.guild.channels.cache.find(channel => channel.name.includes("bot"));
     let botChannel = dbQuery.selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [msg.guild.id]);
     if (botChannel === undefined) {
         botChannel = "noChannelFoundForDrinkie"
@@ -97,7 +97,7 @@ const queryNew = (msg) => {
     dbQuery.insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id, filter_id)", query, botChannel, msg.guild.id, Number(maxNumber) + 1, filter);
     dbQuery.insertStatementDB("p_rotation(rotation, server_id, server_query_id)", "0 0/6 * * *", msg.guild.id, Number(maxNumber) + 1);
 
-    msg.reply("Query has been added!")
+    msg.type.reply("Query has been added!")
 }
 
 /**
@@ -123,7 +123,7 @@ const queryList = (msg) => {
         }
     }
 
-    msg.channel.send(messageResponse);
+    msg.type.reply({content: messageResponse, });
 }
 
 /**
@@ -132,20 +132,19 @@ const queryList = (msg) => {
  * @param {object} msg Message object, generated based on message by user
  */
 const queryRemove = (msg) => {
-    let number = msg.content.replace(prefix + ' settings query remove ', '');
-    if (!isNaN(parseInt(number))) {
-        let queryID = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
+    if (!isNaN(parseInt(msg.content))) {
+        let queryID = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, msg.content]);
         if (queryID !== '') {
-            dbQuery.removeStatementDB("p_queries", ["server_id", "server_query_id"], [msg.guild.id, number]);
-            dbQuery.removeStatementDB("p_rotation", ["server_id", "server_query_id"], [msg.guild.id, number]);
-            msg.reply("Query schedule has been removed.")
+            dbQuery.removeStatementDB("p_queries", ["server_id", "server_query_id"], [msg.guild.id, msg.content]);
+            dbQuery.removeStatementDB("p_rotation", ["server_id", "server_query_id"], [msg.guild.id, msg.content]);
+            msg.type.reply("Query schedule has been removed.")
         }
         else {
-            msg.reply("Query ID cannot be found.")
+            msg.type.reply("Query ID cannot be found.")
         }
     }
     else {
-        msg.reply("ID is not a valid number, or wrong number of arguments found.")
+        msg.type.reply("ID is not a valid number, or wrong number of arguments found.")
     }
 }
 
@@ -155,21 +154,20 @@ const queryRemove = (msg) => {
  * @param {object} msg Message object, generated based on message by user
  */
 const queryEdit = (msg) => {
-    let remainingArgs = msg.content.replace(prefix + ' settings query edit ', '');
-    let number = remainingArgs.substr(0, remainingArgs.indexOf(" "));
-    let queryList = remainingArgs.substr(remainingArgs.indexOf(" ") + 1).split(",");
+    let number = msg.content.substr(0, msg.content.indexOf(" "));
+    let queryList = msg.content.substr(msg.content.indexOf(" ") + 1).split(",");
     if (!isNaN(parseInt(number))) {
         let numberExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (numberExists !== false) {
             dbQuery.updateStatementDB("p_queries", "search_query", ["server_id", "server_query_id"], [queryList, msg.guild.id, number]);
-            msg.reply("Image schedule ID:" + number + " query has been updated.")
+            msg.type.reply("Image schedule ID:" + number + " query has been updated.")
         }
         else {
-            msg.reply("Query ID cannot be found.")
+            msg.type.reply("Query ID cannot be found.")
         }
     }
     else {
-        msg.reply("ID is not a valid number, or wrong number of arguments found.")
+        msg.type.reply("ID is not a valid number, or wrong number of arguments found.")
     }
 }
 
@@ -178,55 +176,52 @@ const queryEdit = (msg) => {
  * @param {object} msg Message object, generated based on message by user
  */
 const channelEdit = (msg) => {
-    let remainingArgs = msg.content.replace(prefix + ' settings channel edit ', '');
-    let number = remainingArgs.substr(0, remainingArgs.indexOf(" "));
-    let channelName = remainingArgs.substr(remainingArgs.indexOf(" ") + 1);
+    let number = msg.content.substr(0, msg.content.indexOf(" "));
+    let channelName = msg.content.substr(msg.content.indexOf(" ") + 1);
     if (!isNaN(parseInt(number))) {
         let numberExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (numberExists !== false) {
             let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName);
             if (channelId !== undefined) {
                 dbQuery.updateStatementDB("p_queries", "channel_name", ["server_id", "server_query_id"], [channelId, msg.guild.id, number]);
-                msg.reply("Image schedule ID:" + number + " channel has been updated.")
+                msg.type.reply("Image schedule ID:" + number + " channel has been updated.")
             } else {
-                msg.reply("Channel name cannot be found.")
+                msg.type.reply("Channel name cannot be found.")
             }
         }
         else {
-            msg.reply("Query ID cannot be found.")
+            msg.type.reply("Query ID cannot be found.")
         }
     }
     else {
-        msg.reply("ID is not a valid number, or wrong number of arguments found.")
+        msg.type.reply("ID is not a valid number, or wrong number of arguments found.")
     }
 }
 
 const channelDefaultEdit = (msg) => {
-    let remainingArgs = msg.content.replace(prefix + ' settings channelDefault edit ', '');
-    let channelName = remainingArgs.substr(remainingArgs.indexOf(" ") + 1);
+    let channelName = msg.content.substr(msg.content.indexOf(" ") + 1);
     let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName);
     if (channelId !== undefined) {
         dbQuery.updateStatementDB("p_server", "default_channel", ["server_id"], [channelId, msg.guild.id]);
-        msg.reply("Default channel has been updated.")
+        msg.type.reply("Default channel has been updated.")
     } else {
-        msg.reply("Channel name cannot be found.")
+        msg.type.reply("Channel name cannot be found.")
     }
 }
 
 const filterEdit = (msg) => {
-    let remainingArgs = msg.content.replace(prefix + ' settings filter edit ', '');
-    let queryID = remainingArgs.substr(0, remainingArgs.indexOf(" "));
-    let filterID = remainingArgs.substr(remainingArgs.indexOf(" ") + 1);
+    let queryID = msg.content.substr(0, msg.content.indexOf(" "));
+    let filterID = msg.content.substr(msg.content.indexOf(" ") + 1);
     if (!isNaN(parseInt(queryID))) {
         let queryExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, queryID]);
         if (queryExists !== false) {
             dbQuery.updateStatementDB("p_queries", "filter_id", ["server_id", "server_query_id"], [filterID, msg.guild.id, queryID]);
-            msg.reply("Image schedule ID:" + queryID + " channel has been updated.");
+            msg.type.reply("Image schedule ID:" + queryID + " channel has been updated.");
         } else {
-            msg.reply("Query ID cannot be found.")
+            msg.type.reply("Query ID cannot be found.")
         }
     } else {
-        msg.reply("ID is not a valid number.");
+        msg.type.reply("ID is not a valid number.");
     }
 }
 

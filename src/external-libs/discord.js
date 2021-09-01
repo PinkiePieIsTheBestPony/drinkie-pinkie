@@ -1,4 +1,4 @@
-const Discord = require('discord.js');
+const { Client, Intents, MessageEmbed } = require('discord.js');
 const reader = require('../json/jsonReader');
 const derpi = require('./derpi.js');
 
@@ -7,7 +7,7 @@ const derpi = require('./derpi.js');
  * @public
  */
 const initialiseDiscordJS = () => {
-    return new Discord.Client();
+    return new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES], partials: ['CHANNEL']});
 }
 
 /**
@@ -16,9 +16,21 @@ const initialiseDiscordJS = () => {
  */
 const createEmbeddedHelp = (msg) => {
     let parsedData = reader.getJSONFile('help.json')
-    if (msg.includes('query')) {
+    if (msg === null) {
+        let generalData = parsedData["help"]["general"];
+        return new MessageEmbed()
+        .setTitle(generalData["title"])
+        .setAuthor(generalData["author"])
+        .setColor(generalData["color"])
+        .setDescription(generalData["description"])
+        .addField("Commands", generalData["fields"]["Commands"])
+        .addField("Guides", generalData["fields"]["Guides"])
+        .addField("Functions", generalData["fields"]["Functions"]);
+        
+    }
+    else if (msg.includes('query')) {
         let queryData = parsedData["help"]["query"];
-        return new Discord.MessageEmbed()
+        return new MessageEmbed()
         .setTitle(queryData["title"])
         .setAuthor(queryData["author"])
         .setColor(queryData["color"])
@@ -27,7 +39,7 @@ const createEmbeddedHelp = (msg) => {
     }
     else if (msg.includes('rotation')) {
         let rotationData = parsedData["help"]["rotation"];
-        return new Discord.MessageEmbed()
+        return new MessageEmbed()
         .setTitle(rotationData["title"])
         .setAuthor(rotationData["author"])
         .setColor(rotationData["color"])
@@ -39,7 +51,7 @@ const createEmbeddedHelp = (msg) => {
     }
     else if (msg.includes('prompts')) {
         let promptData = parsedData["help"]["prompts"];
-        return new Discord.MessageEmbed()
+        return new MessageEmbed()
         .setTitle(promptData["title"])
         .setAuthor(promptData["author"])
         .setColor(promptData["color"])
@@ -48,31 +60,20 @@ const createEmbeddedHelp = (msg) => {
         .addField("Example", promptData["fields"]["Example"])
         .addField("Example Explained", promptData["fields"]["Example Explained"])
     }
-    else {
-        let generalData = parsedData["help"]["general"];
-        return new Discord.MessageEmbed()
-        .setTitle(generalData["title"])
-        .setAuthor(generalData["author"])
-        .setColor(generalData["color"])
-        .setDescription(generalData["description"])
-        .addField("Commands", generalData["fields"]["Commands"])
-        .addField("Guides", generalData["fields"]["Guides"])
-        .addField("Functions", generalData["fields"]["Functions"]);
-    }
 }
 
 const createEmbeddedImg = (derpiObj, attachment) => {
-    return new Discord.MessageEmbed()
+    return new MessageEmbed()
     .setTitle("Derpibooru Image")
     .setURL("https://derpibooru.org/" + derpiObj["id"])
-    .addField("Tags", derpiObj["tags"].join(", ").substring(0, 1020))
+    .addField("Tags", derpiObj["tags"].join(", ").substring(0, 1020).toString())
     .addFields(
-        { name: "Score", value: derpiObj["score"] + "(+" + derpiObj["upvotes"] + "/-" + derpiObj["downvotes"] + ")", inline: true },
+        { name: "Score", value: derpiObj["score"] + "(+" + derpiObj["upvotes"] + "/-" + derpiObj["downvotes"] + ")".toString(), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
-        { name: "Faves", value: derpiObj["faves"], inline: true },
+        { name: "Faves", value: derpiObj["faves"].toString(), inline: true },
         { name: "Artist", value: derpi.getArtistDetails(derpiObj["tags"]), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
-        { name: "Uploaded by", value: derpiObj["uploader"], inline: true }
+        { name: "Uploaded by", value: derpiObj["uploader"] === null ? 'Artist Known' : derpiObj["uploader"], inline: true }
     )
     .setImage(attachment)
     .setFooter("Drinkie Pinkie - Made with 💜")

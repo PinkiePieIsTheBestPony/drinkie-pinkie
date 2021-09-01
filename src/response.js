@@ -53,7 +53,7 @@ function botMessage(msg, client) {
  * @param {object} client [Discord.js] Client object, this represents Drinkie on the server where the message was sent
  */
 async function botGetImg(msg, client) {
-    msg.channel.startTyping();
+    msg.channel.sendTyping();
     if (msg.content.includes("/") || msg.content.includes("\\") || msg.content.includes(";")) {
         msg.reply("GO AWAY")
     }
@@ -71,10 +71,10 @@ async function botGetImg(msg, client) {
                 msg.channel.send("Unknown error...")
             } else {
                 msg.channel.send("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
+                console.log(response);
             }
         }
     }
-    msg.channel.stopTyping();
 }
 
 /**
@@ -83,7 +83,7 @@ async function botGetImg(msg, client) {
  * @param {object} msg Message object, generated based on message by user
  */
 function botGetHelp(msg) {
-    msg.reply(discord.createEmbeddedHelp(msg.content));
+    msg.type.reply({embeds: [discord.createEmbeddedHelp(msg.content)]});
 }
 
 /**
@@ -126,7 +126,9 @@ function botSettingsEdit(msg) {
         ["filter edit", rotationQuery.filterEdit]
     ]);
 
-    let functionName = settingsKeyPair.get(msg.content.split(' ').slice(2, 4).join(' '));
+    let functionName = settingsKeyPair.get(msg.content.split(' ').slice(0, 2).join(' '));
+    msg.content = msg.content.split(' ').slice(2).join(' ');
+
     if (functionName) {
         functionName(msg);
     }
@@ -138,7 +140,7 @@ function botSettingsEdit(msg) {
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
 function botSource(msg) {
-    msg.reply("Here is the GitHub link! https://github.com/PinkiePieIsTheBestPony/drinkie-pinkie")
+    msg.type.reply("Here is the GitHub link! https://github.com/PinkiePieIsTheBestPony/drinkie-pinkie")
 }
 
 /**
@@ -167,57 +169,66 @@ function randomStuff(length, array) {
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
 function botPredict(msg) {
-    let remainingArgs = msg.content.replace(prefix + ' predict ', '');
-    let splitArgs = remainingArgs.trim().split(' ');
+    //let remainingArgs = msg.content.replace(prefix + ' predict ', '');
+    let splitArgs = msg.content.trim().split(' ');
     let removedArgs = splitArgs.slice(1).join(' ').split("''");
     switch (splitArgs[0]) {
         case 'percentage': {
-            if (splitArgs[1].substr(0, 2) === "''") {
+            if (splitArgs[1] === undefined) {
+                msg.type.reply("You need the following argument:`''<question>''`");
+            }
+            else if (splitArgs[1].substr(0, 2) === "''") {
                 if (removedArgs[1] !== undefined) {
-                    msg.reply("Question: `" + removedArgs[1] + "`\n Drinkie has estimated there is a " + talk.randomNumber(0, 101) + "% chance of that happening!" )
+                    msg.type.reply("Query: `" + removedArgs[1] + "`\n Drinkie has estimated there is a " + talk.randomNumber(0, 101) + "% chance!" )
                 } else {
-                    msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+                    msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
                 }
             } else {
-                msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
+                msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
             }
             break;
         }
         case 'percentage-multiple': {
-            if (splitArgs[1].substr(0, 2) === "''") {
+            if (splitArgs[1] === undefined || splitArgs[2] === undefined) {
+                msg.type.reply("You need the following arguments:`''<question>'' <option1, option2>`");
+            }
+            else if (splitArgs[1].substr(0, 2) === "''") {
                 if (removedArgs[2] !== undefined) {
                     let matchups = removedArgs[2].trim().split(",");
                     let arrayPercentages = randomStuff(matchups.length, matchups);
-                    msg.reply("Question: `" + removedArgs[1] + "`\n Each of your options will be presented with a percentage:\n" + arrayPercentages.join(''))
+                    msg.type.reply("Question: `" + removedArgs[1] + "`\n Each of your options will be presented with a percentage:\n" + arrayPercentages.join(''))
                 } else {
-                    msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+                    msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
                 }
             } else {
-                msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
+                msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
             }
             break;
         }
         case 'option': {
-            if (splitArgs[1].substr(0, 2) === "''") {
+            if (splitArgs[1] === undefined || splitArgs[2] === undefined) {
+                msg.type.reply("You need the following arguments:`''<question>'' <option1, option2>`");
+            }
+            else if (splitArgs[1].substr(0, 2) === "''") {
                 if (removedArgs[2] !== undefined) {
                     let matchups = removedArgs[2].trim().split(",");
-                    msg.reply("Question: `" + removedArgs[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[talk.randomNumber(0, matchups.length)].trim() + "`");
+                    msg.type.reply("Question: `" + removedArgs[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[talk.randomNumber(0, matchups.length)].trim() + "`");
                 } else {
-                    msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
+                    msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
                 }
             } else {
-                msg.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
+                msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the start of your message.")
             }
             break;
         }
         default: {
-            msg.reply("You have not selected a prediction mode! Choose between the following: `option, percentage, percentage-multiple`");
+            msg.type.reply("You have not selected a prediction mode! Choose between the following: `option, percentage, percentage-multiple`");
         }
     }
 }
 
 function botBroadcast(msg, client) {
-    if (msg.channel.type === "dm") {
+    if (msg.channel.type === "DM") {
         if (msg.author.id === "113460834692268032") {
             let remainingArgs = msg.content.replace(prefix + ' broadcast ', '');
             let serverType = remainingArgs.trim().split(' ')[0];
@@ -226,7 +237,7 @@ function botBroadcast(msg, client) {
                 post.send(null, false, null, client, message, null, null)
             } else if (/\d/.test(serverType)) {
                 let servers = serverType.split(',');
-                let server = client.guilds.cache.array().filter((guild) => {
+                let server = [...client.guilds.cache.values()].filter((guild) => {
                     for (let i = 0; i < servers.length; i++) {
                         let server = servers[i];
                         if (guild.id === server) {
@@ -283,8 +294,51 @@ const possibleResponses = (msg, client) => {
     
     let functionName = responsesKeyPair.get(command);
     if (functionName) {
-        functionName(msg, client);
+        functionName({content: msg.content.split(' ').slice(2).join(' ') === '' ? null : msg.content.split(' ').slice(2).join(' '), channel: msg.channel, guild: msg.guild, author: msg.author, type: msg}, client);
+    }
+}
+
+/**
+ * Checks input from user regarding commands for Drinkie and will call relevant function
+ * @public
+ * @param {object} msg [Discord.js] Message object, generated based on message by user
+ */
+ const possibleResponsesSlash = (interaction, client) => {
+    const responsesKeyPair = new Map([
+        ["msg", botMessage],
+        ["img", botGetImg],
+        ["help", botGetHelp],
+        ["random", botGetRndNum],
+        ["settings", botSettingsEdit],
+        ["game", game.botGames],
+        ["dailyponk", dailyponk.botPonkSearch],
+        ["source", botSource],
+        ["predict", botPredict]
+    ]);
+
+    const optionNameKeyPair = new Map([
+        ["msg", null],
+        ["img", "query"],
+        ["help", "help_choice"],
+        ["random", "number"],
+        ["settings", "system_choice"],
+        ["game", "game_choice"],
+        ["dailyponk", "search"],
+        ["source", null],
+        ["predict", "predict_options"]
+    ]);
+    
+    let functionName = responsesKeyPair.get(interaction.commandName);
+    let name = optionNameKeyPair.get(interaction.commandName);
+    let values = '';
+    if (name !== null) {
+        values = interaction.options.getString(name);
+    }
+    
+    if (functionName) {
+        functionName({content: values, channel: interaction.channel, type: interaction, author: interaction.member, guild: interaction.guild}, client);
     }
 }
 
 exports.possibleResponses = possibleResponses;
+exports.possibleResponsesSlash = possibleResponsesSlash;

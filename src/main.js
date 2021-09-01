@@ -14,8 +14,6 @@ const { discord_key, prefix } = require('./config');
 const client = discord.initialiseDiscordJS();
 initDB.initialiseDB();
 
-client.login(discord_key);
-
 async function autoPostLoop(client) {
     let allRotationsForServers = dbQueries.selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
     if (allRotationsForServers != '') {
@@ -55,8 +53,8 @@ async function autoPostLoop(client) {
  * 4) Connect to Derpi and run query, fetch image from query and post to relevant server.
  */
 client.on('ready', () => {
-    client.user.setActivity(prefix + ' help');
-    client.guilds.cache.array().forEach(guild => {
+    client.user.setActivity(prefix + ' help or /help');
+    [...client.guilds.cache.values()].forEach(guild => {
         let response = dbQueries.selectAllStatementDB("server_id", "p_server", ["server_id"], "=", [guild.id]);
         if (response !== guild.id) {
             dbQueries.insertGuildDetails(guild);
@@ -88,6 +86,13 @@ client.on('guildCreate', guild => {
     dbQueries.insertGuildDetails(guild);
 });
 
-client.on('message', msg => {
+client.on('messageCreate', msg => {
     responses.possibleResponses(msg, client);
 });
+
+client.on('interactionCreate', interaction => {
+    if (!interaction.isCommand()) return;
+    responses.possibleResponsesSlash(interaction, client);
+});
+
+client.login(discord_key);

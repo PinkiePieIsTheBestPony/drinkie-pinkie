@@ -113,10 +113,10 @@ const decision = (userNum, botNum, msg) => {
                     promptNum = randomNumber(1, a)
                     let indexPromptNum = jsonDBArrayResp[0][a];
                     let authorID = dbQuery.selectAllStatementDB("submitted_by", "p_prompts", ["query_id"], "=", [indexPromptNum]);
-                    msg.reply(response + "The number that you said or generated was the same as mine! Here is your random prompt: \"" + sentMsg[promptNum] + "\" which was provided by: <@!" + authorID + ">");
+                    msg.type.reply(response + "The number that you said or generated was the same as mine! Here is your random prompt: \"" + sentMsg[promptNum] + "\" which was provided by: <@!" + authorID + ">");
                 }
                 else {
-                    msg.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
+                    msg.type.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
                     dbQuery.updateStatementDB("p_guesses", "date_guessed", ["user_id"], [currentTime, msg.author.id]);
                     dbQuery.updateStatementDB("p_guesses", "cooldown_time", ["user_id"], ["4", msg.author.id]);
                 }
@@ -124,7 +124,7 @@ const decision = (userNum, botNum, msg) => {
             }
             else {
                 let totalTimeLeft = Number(usersArraySplit[1]) + Number(cooldownMS) - Number(currentTime);
-                msg.reply("Your cooldown period has not ended yet. There are currently " + totalTimeLeft + " milliseconds left until you can use it again.");
+                msg.type.reply("Your cooldown period has not ended yet. There are currently " + totalTimeLeft + " milliseconds left until you can use it again.");
             }
         }
     }
@@ -133,10 +133,10 @@ const decision = (userNum, botNum, msg) => {
         let response = 'Your number was: "' + userNum + '" while mine was "' + botNum + '". \n';
         if (userNum == botNum) {
             promptNum = randomNumber(1, numOfResp);
-            msg.reply(response + "The number that you said or generated was the same as mine! Here is your random prompt: " + sentMsg[promptNum]);
+            msg.type.reply(response + "The number that you said or generated was the same as mine! Here is your random prompt: " + sentMsg[promptNum]);
         }
         else {
-            msg.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
+            msg.type.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
             dbQuery.updateStatementDB("p_guesses", "date_guessed", ["user_id"], [Date.now(), msg.author.id]);
         }
     }

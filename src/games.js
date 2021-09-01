@@ -1,5 +1,3 @@
-const { prefix } = require('./config');
-
 var peoplePlaying = [];
 
 /**
@@ -213,19 +211,18 @@ function init(gameName, players, msg) {
  * @param {object} msg Message object, generated based on message by user
  */
  const botGames = (msg) => {
-    let remainingArgs = msg.content.replace(prefix + ' game ', '');
-    //!dpi game tictactoe <user>
-
-    if (remainingArgs.startsWith("tictactoe <")) {
+    //let remainingArgs = msg.content.replace(prefix + ' game ', '');
+    if (msg.content.startsWith("tictactoe <@")) {
+        const regex = /.* <@!([0-9]+)>/
         let player1 = msg.author.id;
-        let player2 = msg.mentions.users.first().id;
+        let player2 = msg.content.match(regex)[1];
         let gameState = false;
         if (!peoplePlaying.find(person => { return person == player1 || person == player2 })) {
             peoplePlaying.push(player1, player2);
             if (player1 === player2) {
-                msg.channel.send("<@!" + player1 + "> wants to play with themselves apparently...are you sure you want this match? Y/N")
+                msg.type.reply("<@!" + player1 + "> wants to play with themselves apparently...are you sure you want this match? Y/N")
             } else {
-                msg.channel.send("<@!" + player1 + "> has issued a tic-tac-toe game with <@!" + player2 + ">. Do you accept this match? Y/N")
+                msg.type.reply("<@!" + player1 + "> has issued a tic-tac-toe game with <@!" + player2 + ">. Do you accept this match? Y/N")
             }
             let player2Filter = m => m.author.id == player2
             let collector = msg.channel.createMessageCollector(player2Filter, { time: 60000 });

@@ -13,16 +13,15 @@ const dbQuery = require('./db/dbQuery');
  */
 const send = (derpiObject, isRequest, messageObject, client, message, serverID, channelQueryForServer) => {
     if (channelQueryForServer != null && !isRequest && messageObject == null && serverID != null) {
-        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({message: message, embed: discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])});   
+        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({embeds: [discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});   
     } else if (isRequest == false && channelQueryForServer == null && derpiObject == null) {
         if (serverID != null) {
-            serverID.forEach(guild => guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id])).send(message));
+            serverID.forEach(guild => guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id])).send({content: message}));
         } else {
-            client.guilds.cache.array().forEach(guild => guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id])).send(message));
+            [...client.guilds.cache.values()].forEach(guild => guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id])).send({content: message}));
         }
     } else {
-        messageObject.reply("Result of your query: `" + messageObject.content.split(' ').slice(2).join(' ') + "`", discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"]));
-        messageObject.channel.stopTyping();
+        messageObject.type.reply({ content: "Result of your query: `" + messageObject.content + "`", embeds: [discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});
     }
 }
 

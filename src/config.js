@@ -6,5 +6,6 @@ module.exports = {
     discord_key: process.env.client_token,
     db_url: process.env.DATABASE_URL,
     derpi_key: process.env.derpi_key,
-    prefix: process.env.BOT_PREFIX
+    prefix: process.env.BOT_PREFIX,
+    client_id: process.env.client_id
 };

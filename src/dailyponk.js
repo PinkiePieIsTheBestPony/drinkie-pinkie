@@ -18,10 +18,10 @@ function ponkJSONLookup(searchType, searchValue, msg) {
         let d = new Date(searchValue);
         searchValue = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
     } else {
-        msg.reply("Invalid input found...")
+        msg.type.reply("Invalid input found...")
     }
     let jsonResult = fileJSON["drinkiepic"][searchType][searchValue];
-    msg.reply(jsonResult["link"]);
+    msg.type.reply(jsonResult["link"]);
 }
 
 /**
@@ -52,19 +52,19 @@ const botPonkSearch = (msg) => {
                         }
                         else {
                             let dates = bonusDays.map(day => " " + day.getFullYear() + "-" + (day.getMonth() + 1) + "-" + day.getDate())
-                            msg.reply("Invalid date range... Bonus dates must be the following days: " + dates);
+                            msg.type.reply("Invalid date range... Bonus dates must be the following days: " + dates);
                         }
                     }
                     else {
-                        msg.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
+                        msg.type.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
                     }
                 }
                 else {
-                    msg.reply("Invalid date range... Please enter date between 2019-08-13 & 2020-08-12")
+                    msg.type.reply("Invalid date range... Please enter date between 2019-08-13 & 2020-08-12")
                 }
             }
             else {
-                msg.reply("Invalid date... Please enter date between 2019-08-13 & 2020-08-12")
+                msg.type.reply("Invalid date... Please enter date between 2019-08-13 & 2020-08-12")
             }
         }
         else if (driValString == "random") {
@@ -78,7 +78,7 @@ const botPonkSearch = (msg) => {
                 indexDri = vals[indexDri];
                 ponkJSONLookup(driValType, indexDri.toString(), msg);
             } else {
-                msg.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
+                msg.type.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
             }
         } 
         else if (!isNaN(driValString)) {
@@ -87,26 +87,26 @@ const botPonkSearch = (msg) => {
                 if (driValString <= 366) {
                     ponkJSONLookup(driValType, driValString, msg);
                 } else {
-                    msg.reply("Invalid index number! Valid value is between 1 and 366.")
+                    msg.type.reply("Invalid index number! Valid value is between 1 and 366.")
                 }
             }
             else if (driValType == "bonuses") {
                 if (vals.indexOf(parseInt(driValString)) != -1) {
                     ponkJSONLookup(driValType, driValString, msg);
                 } else {
-                    msg.reply("Invalid index number! Valid values are `" + vals + "`")
+                    msg.type.reply("Invalid index number! Valid values are `" + vals + "`")
                 }
             }
             else {
-                msg.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
+                msg.type.reply("`->" + driValType + " " + driValString + "`Invalid type argument! Types are: `day or bonuses`")
             }
         }
         else {
-            msg.reply("`" + driValType + " " + driValString + "<-` Value argument you have entered is not valid! Here is the following valid values: `date[ex.2019-10-31], index[ex.69], random`")
+            msg.type.reply("`" + driValType + " " + driValString + "<-` Value argument you have entered is not valid! Here is the following valid values: `date[ex.2019-10-31], index[ex.69], random`")
         }
     }
     else {
-        msg.reply("Number of arguments is wrong! You should have the following arguments - type:`day|bonuses` & value:`date[ex.2019-10-31]|index[ex.69]|random`")
+        msg.type.reply("Number of arguments is wrong! You should have the following arguments - type:`day|bonuses` & value:`date[ex.2019-10-31]|index[ex.69]|random`")
     }
 }
 
