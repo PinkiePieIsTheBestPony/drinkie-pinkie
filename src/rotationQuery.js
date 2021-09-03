@@ -1,6 +1,5 @@
 const dbQuery = require('./db/dbQuery');
 const cron = require('./cron');
-const { prefix } = require('./config');
 
 /**
  * Editing of cooldown time for users.
@@ -9,7 +8,6 @@ const { prefix } = require('./config');
  */
  const randomEdit = (msg) => {
     if (msg.member.hasPermission('ADMINISTRATOR')) {
-        //let remainingArguments = msg.content.replace(prefix + ' settings random ', '');
         let numberEnforce = remainingArguments.split(" ")[0];
         let userID = msg.mentions.users.first().id;
         dbQuery.updateStatementDB("p_guesses", "cooldown_time", ["user_id"], [numberEnforce, "user_id", userID]);
@@ -25,8 +23,6 @@ const { prefix } = require('./config');
  * @param {object} msg Message object, generated based on message by user
  */
 const rotationEdit = (msg) => {
-    console.log(msg.content);
-    //let remainingArguments = msg.content.replace(prefix + ' settings rotation edit ', '');
     let number = msg.content.substr(0, msg.content.indexOf(" "));
     let cronArguments = msg.content.substr(msg.content.indexOf(" ") + 1);
     if (!isNaN(parseInt(number))) {
@@ -34,7 +30,7 @@ const rotationEdit = (msg) => {
         if (queryID !== '') {
             cronStatus = cron.cronValidator(cronArguments);
             if (cronStatus) {
-                dbQuery.updateStatementDB("p_rotation", "rotation", ["server_id", "server_query_id"], [cronArguments, msg.guild.id, number]);
+                dbQuery.updateStatementDB("p_rotation", "rotation", ["server_id", "server_query_id"], [cronArguments.split(' ').map((x, i) => i >= 3 ? x-1 : x).join(' '), msg.guild.id, number]);
                 msg.type.reply(cronStatus);
             }
             else {

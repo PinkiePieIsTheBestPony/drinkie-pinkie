@@ -105,7 +105,7 @@ const cronChecker = (query) => {
  */
 const cronValidator = (argument) => {
     const cronPattern = /((\* |\d{1,2} |\d{1,2}-\d{1,2} |(\d{1,2},)+\d{1,2} |\d{1,2}\/\d{1,2} ){4}(\*|\d{1,2}\/\d{1,2}|\d{1,2}-\d{1,2}|(\d{1,2},)+\d{1,2}|\d{1,2}))/;
-    const cronParametersWords = {0: ["minute", 59], 1: ["hour", 23], 2: ["day of the month", 31], 3: ["month", 12], 4: ["day of the week", 7]};
+    const cronParametersWords = {0: ["minute", 59, 0], 1: ["hour", 23, 0], 2: ["day of the month", 31, 1], 3: ["month", 12, 1], 4: ["day of the week", 7, 1]};
     let messageToSend = "I will send a new image: ";
     if (cronPattern.exec(argument) && argument.split(" ").length == 5) {
         let arrayCron = argument.split(" ");
@@ -150,7 +150,7 @@ const cronValidator = (argument) => {
                 continue;
             }
             else if (!isNaN(arrayCron[i])) {
-                if (arrayCron[i] <= cronParametersWords[i][1]) {
+                if (arrayCron[i] <= cronParametersWords[i][1] && arrayCron[i] >= cronParametersWords[i][2]) {
                     if (i >= 3) {
                         messageToSend += `on ${quickConvert(arrayCron[i], i)}, `;
                         continue;
