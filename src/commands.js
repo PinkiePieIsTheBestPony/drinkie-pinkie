@@ -184,7 +184,7 @@ const rest = new REST({ version: '9' }).setToken(discord_key);
 (async () => {
 	try {
 		await rest.put(
-			Routes.applicationGuildCommands(client_id, '564920472949751850'),
+			Routes.applicationCommands(client_id),
 			{ body: commands },
 		);
 
