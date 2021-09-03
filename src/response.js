@@ -122,7 +122,7 @@ function botSettingsEdit(msg) {
         ["query remove", rotationQuery.queryRemove],
         ["query edit", rotationQuery.queryEdit],
         ["channel edit", rotationQuery.channelEdit],
-        ["channelDefault edit", rotationQuery.channelDefaultEdit],
+        ["channel default", rotationQuery.channelDefaultEdit],
         ["filter edit", rotationQuery.filterEdit]
     ]);
 
@@ -321,19 +321,72 @@ const possibleResponses = (msg, client) => {
         ["img", "query"],
         ["help", "help_choice"],
         ["random", "number"],
-        ["settings", "system_choice"],
+        ["settings", "setting_choice"],
         ["game", "game_choice"],
         ["dailyponk", "search"],
         ["source", null],
-        ["predict", "predict_options"]
+        ["predict", "predict"]
+    ]);
+
+    const settings = new Map([
+        ["query", {'list': null, 'new': 'args', 'edit': ['query_id', 'edited_query'], 'remove': 'id'}],
+        ["rotation", {'list': null, 'edit': ['rotation_id', 'edited_rotation']}],
+        ["channel", {'edit': ['query_id', 'channel_name'], 'default': 'default_channel'}],
+        ["filter", {'edit': ['filter_query_id', 'filter_derpi_id']}],
+    ]);
+
+    const predict = new Map([
+        ["percentage", ['question_percentage']],
+        ["percentage-multiple", ['question_percentage_multiple', 'list_percentage']],
+        ['option', ["question_option", "list_option"]]
+    ]);
+
+    const certainChoices = new Map([
+        ["game_choice", ['game_choice', 'mention']],
+        ["search", ['search', 'day']]
     ]);
     
     let functionName = responsesKeyPair.get(interaction.commandName);
     let name = optionNameKeyPair.get(interaction.commandName);
     let values = '';
-    if (name !== null) {
-        values = interaction.options.getString(name);
+    if (name == 'setting_choice') {
+        values = [];
+        let settingsDict = settings.get(interaction.options.getSubcommandGroup());
+        let specificArgs = settingsDict[interaction.options.getSubcommand()];
+        values.push(interaction.options.getSubcommandGroup(), interaction.options.getSubcommand());
+        if (specificArgs !== null) {
+            if (Array.isArray(specificArgs)) {
+                for (i = 0; i < specificArgs.length; i++) {
+                    values.push(interaction.options.getString(specificArgs[i]));
+                }
+            } else {
+                values.push(interaction.options.getString(specificArgs));
+            }
+        }
+        values = values.join(' ')
+    } else if (name == 'predict') {
+        values = [];
+        let predictDict = predict.get(interaction.options.getSubcommand());
+        values.push(interaction.options.getSubcommand());
+        for (let i = 0; i < predictDict.length; i++) {
+            if (i === 0) {
+                values.push("''" + interaction.options.getString(predictDict[i]) + "''");
+            } else {
+                values.push(interaction.options.getString(predictDict[i]));
+            }
+        }
+        values = values.join(' ');
+    } else if (name == 'game_choice' || name == 'search') {
+        values = [];
+        let choicesDict = certainChoices.get(name);
+        for (let i = 0; i < choicesDict.length; i++) {
+            values.push(interaction.options.getString(choicesDict[i]));
+        }
+        values = values.join(' ');
     }
+    else if (name !== null) {
+        values = interaction.options.getString(name);
+    } 
     
     if (functionName) {
         functionName({content: values, channel: interaction.channel, type: interaction, author: interaction.member, guild: interaction.guild}, client);
