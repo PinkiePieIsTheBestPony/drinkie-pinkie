@@ -30,7 +30,7 @@ const rotationEdit = (msg) => {
         if (queryID !== '') {
             cronStatus = cron.cronValidator(cronArguments);
             if (cronStatus) {
-                dbQuery.updateStatementDB("p_rotation", "rotation", ["server_id", "server_query_id"], [cronArguments.split(' ').map((x, i) => i >= 3 ? x-1 : x).join(' '), msg.guild.id, number]);
+                dbQuery.updateStatementDB("p_rotation", "rotation", ["server_id", "server_query_id"], [cronArguments.split(' ').map((x, i) => i >= 3 && !isNaN(x) ? x-1 : x).join(' '), msg.guild.id, number]);
                 msg.type.reply(cronStatus);
             }
             else {

@@ -51,7 +51,7 @@ const getArtistDetails = (tagsArray) => {
 const getDerpibooruImage = async (message, filter, isNSFW) => {
     let tagList = [];
     message = message.replace(prefix + ' img ', '');
-    if (filter === null) {
+    if (filter === null || filter === "null") {
         const regx = /filter_id:([0-9]{1,})/
         let expr = message.split(" ")[0];
         if (regx.test(expr)) {

@@ -63,6 +63,7 @@ const createEmbeddedHelp = (msg) => {
 }
 
 const createEmbeddedImg = (derpiObj, attachment) => {
+    console.log(derpiObj);
     return new MessageEmbed()
     .setTitle("Derpibooru Image")
     .setURL("https://derpibooru.org/" + derpiObj["id"])
@@ -73,7 +74,7 @@ const createEmbeddedImg = (derpiObj, attachment) => {
         { name: "Faves", value: derpiObj["faves"].toString(), inline: true },
         { name: "Artist", value: derpi.getArtistDetails(derpiObj["tags"]), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
-        { name: "Uploaded by", value: derpiObj["uploader"] === null ? 'Artist Known' : derpiObj["uploader"], inline: true }
+        { name: "Uploaded by", value: derpiObj["uploader"] === null ? 'Anonymous' : derpiObj["uploader"], inline: true }
     )
     .setImage(attachment)
     .setFooter("Drinkie Pinkie - Made with 💜")
