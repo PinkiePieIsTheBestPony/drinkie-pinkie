@@ -63,7 +63,6 @@ const createEmbeddedHelp = (msg) => {
 }
 
 const createEmbeddedImg = (derpiObj, attachment) => {
-    console.log(derpiObj);
     return new MessageEmbed()
     .setTitle("Derpibooru Image")
     .setURL("https://derpibooru.org/" + derpiObj["id"])
@@ -72,7 +71,7 @@ const createEmbeddedImg = (derpiObj, attachment) => {
         { name: "Score", value: derpiObj["score"] + "(+" + derpiObj["upvotes"] + "/-" + derpiObj["downvotes"] + ")".toString(), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
         { name: "Faves", value: derpiObj["faves"].toString(), inline: true },
-        { name: "Artist", value: derpi.getArtistDetails(derpiObj["tags"]), inline: true },
+        { name: "Artist", value: derpi.getArtistDetails(derpiObj["tags"]).toString(), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
         { name: "Uploaded by", value: derpiObj["uploader"] === null ? 'Anonymous' : derpiObj["uploader"], inline: true }
     )

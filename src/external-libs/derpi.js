@@ -20,10 +20,6 @@ const getArtistDetails = (tagsArray) => {
         let tagsStripped = [];
         let a = 0;
         for (i = 0; i < arrOfTags.length; i++) {
-            if (numOfArtists == a) {
-                const artistsString = tagsStripped.join(", ");
-                return artistsString;
-            }
             let tag = arrOfTags[i].trim();
             if (pattern.test(tag)) {
                 let tagStripped = tag.substring(7);
@@ -33,6 +29,10 @@ const getArtistDetails = (tagsArray) => {
                 } else {
                     return tagStripped;
                 }
+            }
+            if (numOfArtists == a) {
+                const artistsString = tagsStripped.join(", ");
+                return artistsString;
             }
         }
     }
