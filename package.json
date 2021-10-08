@@ -25,6 +25,7 @@
     "discord.js": "^13.1.0",
     "dotenv": "^8.6.0",
     "ffmpeg": "^0.0.4",
+    "ffmpeg-static": "^4.4.0",
     "fluent-ffmpeg": "^2.1.2",
     "pg-native": "^3.0.0",
     "sodium": "^3.0.2",
