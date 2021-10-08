@@ -55,10 +55,7 @@ async function autoPostLoop(client) {
 client.on('ready', () => {
     client.user.setActivity(prefix + ' help or /help');
     [...client.guilds.cache.values()].forEach(guild => {
-        let response = dbQueries.selectAllStatementDB("server_id", "p_server", ["server_id"], "=", [guild.id]);
-        if (response !== guild.id) {
-            dbQueries.insertGuildDetails(guild);
-        }
+        dbQueries.insertGuildDetails(guild);
     });
     nodeCron.job(
         '0 * * * * *',

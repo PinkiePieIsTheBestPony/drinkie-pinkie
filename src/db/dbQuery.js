@@ -107,10 +107,22 @@ const insertGuildDetails = (guild) => {
     pQuery = "pinkie pie, safe, solo, !webm, score.gte:100";
     pRotation = "0 0/6 * * *";
 
-    insertStatementDB("p_server(server_id, server_name, default_channel)", guild.id, guild.name, 'noChannelFoundForDrinkie');
-    insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", pQuery, 'noChannelFoundForDrinkie', guild.id, 0);
-    insertStatementDB("p_rotation(rotation, server_id, server_query_id)", pRotation, guild.id, 0);
-    insertStatementDB("p_queue(server_id, queue_data)", guild.id, 'noDataFoundInQueue');
+    let guildInfo = selectAllStatementDB("server_id", "p_server", ["server_id"], "=", [guild.id]);
+    if (guildInfo !== guild.id) {
+        insertStatementDB("p_server(server_id, server_name, default_channel)", guild.id, guild.name, 'noChannelFoundForDrinkie');
+    }
+    let queryInfo = selectAllStatementDB("server_id", "p_queries", ["server_id"], "=", [guild.id]);
+    if (queryInfo !== guild.id) {
+        insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", pQuery, 'noChannelFoundForDrinkie', guild.id, 0);
+    }
+    let rotationInfo = selectAllStatementDB("server_id", "p_rotation", ["server_id"], "=", [guild.id]);
+    if (rotationInfo !== guild.id) {
+        insertStatementDB("p_rotation(rotation, server_id, server_query_id)", pRotation, guild.id, 0);
+    }
+    let queueInfo = selectAllStatementDB("server_id", "p_queue", ["server_id"], "=", [guild.id]);
+    if (queueInfo !== guild.id) {
+        insertStatementDB("p_queue(server_id, queue_data)", guild.id, 'noDataFoundInQueue');
+    }
 }
 
 exports.selectAllStatementDB = selectAllStatementDB;
