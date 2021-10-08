@@ -1,9 +1,10 @@
 const discord = require('./external-libs/discord.js')
-const derpi = require('./external-libs/derpi.js');
+const derpi = require('./external-libs/derpi');
 const post = require('./post');
 const game = require('./games');
 const talk = require('./talk');
 const dailyponk = require('./dailyponk');
+const sound = require('./sound');
 const rotationQuery = require('./rotationQuery');
 const { prefix } = require('./config');
 
@@ -259,6 +260,27 @@ function botBroadcast(msg, client) {
     }
 }
 
+function botSounds(msg) {
+    optionKeyPair = new Map([
+        ["queue join", sound.join],
+        ["queue leave", sound.leave],
+        ["queue add", sound.addToQueue],
+        ["queue remove", sound.removeFromQueue],
+        ["queue clear", sound.clearQueue],
+        ["queue list", sound.showList],
+        ["queue pause", sound.pause],
+        ["queue next", sound.next],
+        ["queue prev", sound.prev],
+    ]);
+
+    let functionName = optionKeyPair.get(msg.content.split(' ').slice(0, 2).join(' '));
+    msg.content = msg.content.split(' ').slice(2).join(' ');
+
+    if (functionName) {
+        functionName(msg);
+    }
+}
+
 /**
  * Checks input from user regarding commands for Drinkie and will call relevant function
  * @public
@@ -275,7 +297,8 @@ const possibleResponses = (msg, client) => {
         [prefix + " dailyponk ", dailyponk.botPonkSearch],
         [prefix + " source ", botSource],
         [prefix + " predict ", botPredict],
-        [prefix + " broadcast ", botBroadcast]
+        [prefix + " broadcast ", botBroadcast],
+        [prefix + " sounds ", botSounds]
     ]);
 
     if (msg.mentions.has(client.user)) {
@@ -294,7 +317,7 @@ const possibleResponses = (msg, client) => {
     
     let functionName = responsesKeyPair.get(command);
     if (functionName) {
-        functionName({content: msg.content.split(' ').slice(2).join(' ') === '' ? null : msg.content.split(' ').slice(2).join(' '), channel: msg.channel, guild: msg.guild, author: msg.author, type: msg}, client);
+        functionName({content: msg.content.split(' ').slice(2).join(' ') === '' ? null : msg.content.split(' ').slice(2).join(' '), channel: msg.channel, guild: msg.guild, author: msg.author, type: msg, member: msg.member, client: msg.client}, client);
     }
 }
 
@@ -313,7 +336,8 @@ const possibleResponses = (msg, client) => {
         ["game", game.botGames],
         ["dailyponk", dailyponk.botPonkSearch],
         ["source", botSource],
-        ["predict", botPredict]
+        ["predict", botPredict],
+        ["sounds", botSounds]
     ]);
 
     const optionNameKeyPair = new Map([
@@ -325,7 +349,8 @@ const possibleResponses = (msg, client) => {
         ["game", "game_choice"],
         ["dailyponk", "search"],
         ["source", null],
-        ["predict", "predict"]
+        ["predict", "predict"],
+        ["sounds", "sounds_choice"]
     ]);
 
     const settings = new Map([
@@ -346,10 +371,29 @@ const possibleResponses = (msg, client) => {
         ["search", ['search', 'day']]
     ]);
     
+    const sounds = new Map([
+        ["queue", {"join": null, "leave": null, "add": "url", "remove": "index", "clear": null, "list": null, "pause": null, "next": null, "prev": null}]
+    ]);
+    
     let functionName = responsesKeyPair.get(interaction.commandName);
     let name = optionNameKeyPair.get(interaction.commandName);
     let values = '';
-    if (name == 'setting_choice') {
+    if (name == 'sounds_choice') {
+        values = [];
+        let soundsDict = sounds.get(interaction.options.getSubcommandGroup());
+        let specificArgs = soundsDict[interaction.options.getSubcommand()];
+        values.push(interaction.options.getSubcommandGroup(), interaction.options.getSubcommand());
+        if (specificArgs !== null) {
+            if (Array.isArray(specificArgs)) {
+                for (i = 0; i < specificArgs.length; i++) {
+                    values.push(interaction.options.getString(specificArgs[i]));
+                }
+            } else {
+                values.push(interaction.options.getString(specificArgs));
+            }
+        }
+        values = values.join(' ')
+    } else if (name == 'setting_choice') {
         values = [];
         let settingsDict = settings.get(interaction.options.getSubcommandGroup());
         let specificArgs = settingsDict[interaction.options.getSubcommand()];
@@ -389,7 +433,7 @@ const possibleResponses = (msg, client) => {
     } 
     
     if (functionName) {
-        functionName({content: values, channel: interaction.channel, type: interaction, author: interaction.member, guild: interaction.guild}, client);
+        functionName({content: values, channel: interaction.channel, type: interaction, author: interaction.member, guild: interaction.guild, member: interaction.member, client: interaction.client}, client);
     }
 }
 

@@ -22,7 +22,8 @@ const commands = [
                 .setDescription('Specific help option')
                 .addChoice('Query', 'query')
                 .addChoice('Rotation', 'rotation')
-                .addChoice('Prompts', 'prompts')),
+                .addChoice('Prompts', 'prompts')
+                .addChoice('Audio', 'audio')),
     new SlashCommandBuilder()
         .setName('random')
         .setDescription('Will tell you one of my commands if your number matches wuth my generated one')
@@ -175,7 +176,48 @@ const commands = [
                 .addStringOption(option =>
                     option.setName('list_option')
                         .setDescription('List where one will be chosen.')
-                        .setRequired(true)))
+                        .setRequired(true))),
+    new SlashCommandBuilder()
+        .setName('sounds')
+        .setDescription('Enables connection with voice channel')
+        .addSubcommandGroup(group => 
+            group.setName('queue')
+            .setDescription('Commands specifically related to interacting with the YT player (don\'t tell Google!)')
+            .addSubcommand(subcommand =>
+                subcommand.setName("join")
+                .setDescription("Have Drinkie join VC, based on where current user is."))
+            .addSubcommand(subcommand => 
+                subcommand.setName("leave")
+                .setDescription("Drinkie leaves VC"))
+            .addSubcommand(subcommand =>
+                subcommand.setName("add")
+                .setDescription("Add YT links to the queue.")
+                .addStringOption(option => 
+                    option.setName('url')
+                    .setDescription("Put the link here.")
+                    .setRequired(true)))
+            .addSubcommand(subcommand =>
+                subcommand.setName("remove")
+                .setDescription("Removes a value, based on an index value")
+                .addStringOption(option =>
+                    option.setName("index")
+                    .setDescription("Enter the index value used in the list.")
+                    .setRequired(true)))
+            .addSubcommand(subcommand =>
+                subcommand.setName("clear")
+                .setDescription("Clears the queue."))
+            .addSubcommand(subcommand => 
+                subcommand.setName("list")
+                .setDescription("Lists a selection of songs in the queue (prev and next)"))
+            .addSubcommand(subcommand =>
+                subcommand.setName("pause")
+                .setDescription("Pauses the music"))
+            .addSubcommand(subcommand => 
+                subcommand.setName("next")
+                .setDescription("Plays next track in the queue"))
+            .addSubcommand(subcommand => 
+                subcommand.setName("prev")
+                .setDescription("Plays previous track in the queue")))    
 ]
 	.map(command => command.toJSON());
 
