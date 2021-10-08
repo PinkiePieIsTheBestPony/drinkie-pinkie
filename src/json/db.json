@@ -5,7 +5,8 @@
             "2": "CREATE TABLE IF NOT EXISTS p_queries (query_id SERIAL PRIMARY KEY, search_query TEXT, channel_name TEXT, server_id TEXT NOT NULL, server_query_id INTEGER NOT NULL, filter_id TEXT, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
             "3": "CREATE TABLE IF NOT EXISTS p_rotation (rotation_id SERIAL PRIMARY KEY, rotation TEXT, server_id TEXT NOT NULL, server_query_id INTEGER NOT NULL, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
             "4": "CREATE TABLE IF NOT EXISTS p_guesses (user_id TEXT PRIMARY KEY, date_guessed TEXT, cooldown_time TEXT);",
-            "5": "CREATE TABLE IF NOT EXISTS p_prompts (query_id SERIAL PRIMARY KEY, json_prompt TEXT, json_response TEXT, submitted_by TEXT);"
+            "5": "CREATE TABLE IF NOT EXISTS p_prompts (query_id SERIAL PRIMARY KEY, json_prompt TEXT, json_response TEXT, submitted_by TEXT);",
+            "6": "CREATE TABLE IF NOT EXISTS p_queue (storage_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, queue_data TEXT, FOREIGN KEY(server_id) REFERENCES p_server(server_id));"
         }
     }
 }

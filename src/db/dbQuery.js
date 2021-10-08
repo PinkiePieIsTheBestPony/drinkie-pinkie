@@ -110,6 +110,7 @@ const insertGuildDetails = (guild) => {
     insertStatementDB("p_server(server_id, server_name, default_channel)", guild.id, guild.name, 'noChannelFoundForDrinkie');
     insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", pQuery, 'noChannelFoundForDrinkie', guild.id, 0);
     insertStatementDB("p_rotation(rotation, server_id, server_query_id)", pRotation, guild.id, 0);
+    insertStatementDB("p_queue(server_id, queue_data)", guild.id, 'noDataFoundInQueue');
 }
 
 exports.selectAllStatementDB = selectAllStatementDB;
