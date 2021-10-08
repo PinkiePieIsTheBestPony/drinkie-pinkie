@@ -7,7 +7,7 @@ const derpi = require('./derpi.js');
  * @public
  */
 const initialiseDiscordJS = () => {
-    return new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES], partials: ['CHANNEL']});
+    return new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES], partials: ['CHANNEL']});
 }
 
 /**
@@ -59,6 +59,15 @@ const createEmbeddedHelp = (msg) => {
         .addField("Commands", promptData["fields"]["Commands"])
         .addField("Example", promptData["fields"]["Example"])
         .addField("Example Explained", promptData["fields"]["Example Explained"])
+    } 
+    else if (msg.includes('audio')) {
+        let audioData = parsedData["help"]["audio"];
+        return new MessageEmbed()
+        .setTitle(audioData["title"])
+        .setAuthor(audioData["author"])
+        .setColor(audioData["color"])
+        .setDescription(audioData["description"])
+        .addField("Commands", audioData["fields"]["Commands"]);
     }
 }
 
@@ -79,6 +88,18 @@ const createEmbeddedImg = (derpiObj, attachment) => {
     .setFooter("Drinkie Pinkie - Made with 💜")
 }
 
+const createQueueList = (prevQueue, newQueue, prevInQueue, nextInQueue, currentlyPlaying) => {
+    return new MessageEmbed()
+    .setTitle("YouTube Queue")
+    .addFields(
+        { name: "Queue Counter", value: (prevQueue.length+1) + "/" + (prevQueue.length + newQueue.length) },
+        { name: "Current Song", value: currentlyPlaying}
+    )
+    .addField("Prev Tracklist", prevInQueue)
+    .addField("Next Tracklist", nextInQueue)
+}
+
 exports.initialiseDiscordJS = initialiseDiscordJS;
 exports.createEmbeddedHelp = createEmbeddedHelp;
 exports.createEmbeddedImg = createEmbeddedImg;
+exports.createQueueList = createQueueList;
