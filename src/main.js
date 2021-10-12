@@ -75,8 +75,8 @@ client.on('guildDelete', guild => {
     if (guild.available) {
         dbQueries.removeStatementDB("p_rotation", ["server_id"], [guild.id]);
         dbQueries.removeStatementDB("p_queries", ["server_id"], [guild.id]);
-        dbQueries.removeStatementDB("p_server", ["server_id"], [guild.id]);
         dbQueries.removeStatementDB("p_queue", ["server_id"], [guild.id]);
+        dbQueries.removeStatementDB("p_server", ["server_id"], [guild.id]);
     }
 });
 
