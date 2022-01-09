@@ -85,7 +85,7 @@ async function playQueue(serverID, msg) {
         audioPlayer.on('error', error => {
             console.error(`Error: ${error}.`);
             if (error.message === "Status code: 403") {
-                playQueue(serverID, msg);
+                nextSong(queueNew, serverID, msg);
             } else {
                 msg.channel.send("Error encountered...going to disconnect and leave.");
                 safelyRemove(msg);
