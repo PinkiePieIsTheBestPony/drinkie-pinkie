@@ -1,6 +1,10 @@
 const dbQuery = require('./db/dbQuery');
 const cron = require('./cron');
 
+function validateNumber(numToValidate) {
+    return parseInt(numToValidate, 10);
+}
+
 /**
  * Editing of cooldown time for users.
  * @private
@@ -8,7 +12,7 @@ const cron = require('./cron');
  */
  const randomEdit = (msg) => {
     if (msg.member.hasPermission('ADMINISTRATOR')) {
-        let numberEnforce = remainingArguments.split(" ")[0];
+        let numberEnforce = validateNumber(remainingArguments.split(" ")[0]);
         let userID = msg.mentions.users.first().id;
         dbQuery.updateStatementDB("p_guesses", "cooldown_time", ["user_id"], [numberEnforce, "user_id", userID]);
         msg.type.reply("I have changed the cooldown period for <@!" + userID + "> to " + numberEnforce + " hours.");
@@ -23,9 +27,9 @@ const cron = require('./cron');
  * @param {object} msg Message object, generated based on message by user
  */
 const rotationEdit = (msg) => {
-    let number = msg.content.substr(0, msg.content.indexOf(" "));
+    let number = validateNumber(msg.content.substr(0, msg.content.indexOf(" ")));
     let cronArguments = msg.content.substr(msg.content.indexOf(" ") + 1);
-    if (!isNaN(parseInt(number))) {
+    if (!isNaN(number)) {
         let queryID = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (queryID !== '') {
             cronStatus = cron.cronValidator(cronArguments);
@@ -128,11 +132,12 @@ const queryList = (msg) => {
  * @param {object} msg Message object, generated based on message by user
  */
 const queryRemove = (msg) => {
-    if (!isNaN(parseInt(msg.content))) {
-        let queryID = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, msg.content]);
+    let number = validateNumber(msg.content)
+    if (!isNaN(number)) {
+        let queryID = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (queryID !== '') {
-            dbQuery.removeStatementDB("p_queries", ["server_id", "server_query_id"], [msg.guild.id, msg.content]);
-            dbQuery.removeStatementDB("p_rotation", ["server_id", "server_query_id"], [msg.guild.id, msg.content]);
+            dbQuery.removeStatementDB("p_queries", ["server_id", "server_query_id"], [msg.guild.id, number]);
+            dbQuery.removeStatementDB("p_rotation", ["server_id", "server_query_id"], [msg.guild.id, number]);
             msg.type.reply("Query schedule has been removed.")
         }
         else {
@@ -150,9 +155,9 @@ const queryRemove = (msg) => {
  * @param {object} msg Message object, generated based on message by user
  */
 const queryEdit = (msg) => {
-    let number = msg.content.substr(0, msg.content.indexOf(" "));
+    let number = validateNumber(msg.content.substr(0, msg.content.indexOf(" ")));
     let queryList = msg.content.substr(msg.content.indexOf(" ") + 1).split(",");
-    if (!isNaN(parseInt(number))) {
+    if (!isNaN(number)) {
         let numberExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (numberExists !== false) {
             dbQuery.updateStatementDB("p_queries", "search_query", ["server_id", "server_query_id"], [queryList, msg.guild.id, number]);
@@ -172,9 +177,9 @@ const queryEdit = (msg) => {
  * @param {object} msg Message object, generated based on message by user
  */
 const channelEdit = (msg) => {
-    let number = msg.content.substr(0, msg.content.indexOf(" "));
+    let number = validateNumber(msg.content.substr(0, msg.content.indexOf(" ")));
     let channelName = msg.content.substr(msg.content.indexOf(" ") + 1);
-    if (!isNaN(parseInt(number))) {
+    if (!isNaN(number)) {
         let numberExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (numberExists !== false) {
             let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName);
@@ -206,9 +211,9 @@ const channelDefaultEdit = (msg) => {
 }
 
 const filterEdit = (msg) => {
-    let queryID = msg.content.substr(0, msg.content.indexOf(" "));
-    let filterID = msg.content.substr(msg.content.indexOf(" ") + 1);
-    if (!isNaN(parseInt(queryID))) {
+    let queryID = validateNumber(msg.content.substr(0, msg.content.indexOf(" ")));
+    let filterID = validateNumber(msg.content.substr(msg.content.indexOf(" ") + 1));
+    if (!isNaN(queryID)) {
         let queryExists = dbQuery.selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, queryID]);
         if (queryExists !== false) {
             dbQuery.updateStatementDB("p_queries", "filter_id", ["server_id", "server_query_id"], [filterID, msg.guild.id, queryID]);
