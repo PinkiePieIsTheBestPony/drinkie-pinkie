@@ -265,6 +265,7 @@ function botSounds(msg) {
         ["queue join", sound.join],
         ["queue leave", sound.leave],
         ["queue add", sound.addToQueue],
+        ["queue addPlaylist", sound.addPlaylistToQueue],
         ["queue remove", sound.removeFromQueue],
         ["queue clear", sound.clearQueue],
         ["queue list", sound.showList],
@@ -273,11 +274,28 @@ function botSounds(msg) {
         ["queue prev", sound.prev],
     ]);
 
+    optArgsList = ['notif'];
+    optionalArgs = {'notif': true};
+
+    msg.content = msg.content.replace(/ --(.*?)=(true|false)/g, (matchedOpt, $1, $2) => {
+        for (i = 0; i < optArgsList.length; i++) {
+            if (optArgsList[i]==$1 && ($2 === 'true' || $2 === 'false')) {
+                switch ($1) {
+                    case "notif": {
+                        optionalArgs.notif = ($2 === 'true')
+                        break;
+                    }
+                }
+            };
+        }
+        return '';
+    });
+
     let functionName = optionKeyPair.get(msg.content.split(' ').slice(0, 2).join(' '));
     msg.content = msg.content.split(' ').slice(2).join(' ');
 
     if (functionName) {
-        functionName(msg);
+        functionName(msg, optionalArgs);
     }
 }
 
@@ -372,7 +390,7 @@ const possibleResponses = (msg, client) => {
     ]);
     
     const sounds = new Map([
-        ["queue", {"join": null, "leave": null, "add": "url", "remove": "index", "clear": null, "list": null, "pause": null, "next": null, "prev": null}]
+        ["queue", {"join": "args", "leave": "args", "add": ["url", "args"], "remove": ["index", "args"], "clear": "args", "list": "args", "pause": "args", "next": "args", "prev": "args"}]
     ]);
     
     let functionName = responsesKeyPair.get(interaction.commandName);
