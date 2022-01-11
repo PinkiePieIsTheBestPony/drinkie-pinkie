@@ -66,7 +66,7 @@ async function playQueue(serverID, msg) {
         }));
 
         audioPlayer.on(AudioPlayerStatus.Playing, () => {
-            if (allOptsGbl.notif) msg.channel.reply(`Now playing: ${queue[0].title}`)
+            if (allOptsGbl.notif) msg.channel.send(`Now playing: ${queue[0].title}`)
         });
 
         audioPlayer.on(AudioPlayerStatus.Idle, () => {
