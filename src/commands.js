@@ -185,39 +185,86 @@ const commands = [
             .setDescription('Commands specifically related to interacting with the YT player (don\'t tell Google!)')
             .addSubcommand(subcommand =>
                 subcommand.setName("join")
-                .setDescription("Have Drinkie join VC, based on where current user is."))
+                .setDescription("Have Drinkie join VC, based on where current user is.")
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args for bonus options")
+                    .setRequired(false)))
             .addSubcommand(subcommand => 
                 subcommand.setName("leave")
-                .setDescription("Drinkie leaves VC"))
+                .setDescription("Drinkie leaves VC")
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
             .addSubcommand(subcommand =>
                 subcommand.setName("add")
                 .setDescription("Add YT links to the queue.")
                 .addStringOption(option => 
                     option.setName('url')
                     .setDescription("Put the link here.")
-                    .setRequired(true)))
+                    .setRequired(true))
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
+            .addSubcommand(subcommand =>
+                subcommand.setName("addplaylist")
+                .setDescription("Adds all videos in YT Playlist to the queue.")
+                .addStringOption(option => 
+                    option.setName('playlistid')
+                    .setDescription("Put playlist ID here.")
+                    .setRequired(true))
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
             .addSubcommand(subcommand =>
                 subcommand.setName("remove")
                 .setDescription("Removes a value, based on an index value")
                 .addStringOption(option =>
                     option.setName("index")
                     .setDescription("Enter the index value used in the list.")
-                    .setRequired(true)))
+                    .setRequired(true))
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
             .addSubcommand(subcommand =>
                 subcommand.setName("clear")
-                .setDescription("Clears the queue."))
+                .setDescription("Clears the queue.")
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
             .addSubcommand(subcommand => 
                 subcommand.setName("list")
-                .setDescription("Lists a selection of songs in the queue (prev and next)"))
+                .setDescription("Lists a selection of songs in the queue (prev and next)")
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
             .addSubcommand(subcommand =>
                 subcommand.setName("pause")
-                .setDescription("Pauses the music"))
+                .setDescription("Pauses the music")
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
             .addSubcommand(subcommand => 
                 subcommand.setName("next")
-                .setDescription("Plays next track in the queue"))
+                .setDescription("Plays next track in the queue")
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false)))
             .addSubcommand(subcommand => 
                 subcommand.setName("prev")
-                .setDescription("Plays previous track in the queue")))    
+                .setDescription("Plays previous track in the queue")
+                .addStringOption(option => 
+                    option.setName('args')
+                    .setDescription("Additional args")
+                    .setRequired(false))))
 ]
 	.map(command => command.toJSON());
 
