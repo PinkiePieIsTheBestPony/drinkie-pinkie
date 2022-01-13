@@ -1,5 +1,6 @@
-const { Search } = require('dinky.js');
-const { derpi_key, prefix } = require('../config');
+//const { Search } = require('dinky.js');
+import {Search} from "dinky.js"
+import { derpi_key, prefix } from '../config.js';
 
 /**
  * Shortcut function which takes a command and strips it for the neccessary data and turns it into an array
@@ -11,7 +12,7 @@ function getArguments(message, query) {
     return message.replace(query, '').replace(/\s*,\s*/g, ",").split(',');
 }
 
-const getArtistDetails = (tagsArray) => {
+export const getArtistDetails = (tagsArray) => {
     const tags = tagsArray.toString();
     if (tags.includes("artist:")) {
         const numOfArtists = tags.match(new RegExp("artist:", "g") || []).length;
@@ -19,7 +20,7 @@ const getArtistDetails = (tagsArray) => {
         const arrOfTags = tags.split(",");
         let tagsStripped = [];
         let a = 0;
-        for (i = 0; i < arrOfTags.length; i++) {
+        for (let i = 0; i < arrOfTags.length; i++) {
             let tag = arrOfTags[i].trim();
             if (pattern.test(tag)) {
                 let tagStripped = tag.substring(7);
@@ -48,7 +49,7 @@ const getArtistDetails = (tagsArray) => {
  * @param {string} filter ID corresponding to derpi filter system, for blocking particular tags
  * @param {boolean} isNSFW Checks if channel the command is posted in is NSFW.
  */
-const getDerpibooruImage = async (message, filter, isNSFW) => {
+export const getDerpibooruImage = async (message, filter, isNSFW) => {
     let tagList = [];
     message = message.replace(prefix + ' img ', '');
     if (filter === null || filter === "null") {
@@ -108,10 +109,6 @@ const getDerpibooruImage = async (message, filter, isNSFW) => {
     return resp.images[0];
 }
 
-const getDerpibooruImageID = (id) => {
+export const getDerpibooruImageID = (id) => {
     return dinky({key: derpi_key}).images().getById(id);
 }
-
-exports.getDerpibooruImage = getDerpibooruImage;
-exports.getDerpibooruImageID = getDerpibooruImageID;
-exports.getArtistDetails = getArtistDetails;
