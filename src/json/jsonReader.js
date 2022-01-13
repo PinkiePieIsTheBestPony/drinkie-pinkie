@@ -1,4 +1,6 @@
-const fs = require('fs');
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 /**
  * Parses JSON files on filesystem
@@ -6,8 +8,6 @@ const fs = require('fs');
  * @public
  * @param {String} name JSON file name to grab
  */
-const getJSONFile = (name) => {
-    return JSON.parse(fs.readFileSync(__dirname + '/' + name));
+export const getJSONFile = (name) => {
+    return JSON.parse(fs.readFileSync(dirname(fileURLToPath(import.meta.url)) + '/' + name));
 }
-
-exports.getJSONFile = getJSONFile;

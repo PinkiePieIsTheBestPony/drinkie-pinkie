@@ -1,5 +1,5 @@
-const pg = require('pg-native');
-const { db_url } = require('../config');
+import pg from 'pg-native';
+import { db_url } from '../config.js';
 
 /**
  * Opens a new DB connection object
@@ -13,10 +13,8 @@ function openDB() {
  * Creates and connects the connection to the database
  * @public
  */
-const dbConnect = () => {
+export const dbConnect = () => {
     let dbCon = openDB();
     dbCon.connectSync(db_url);
     return dbCon;
 }
-
-exports.dbConnect = dbConnect;

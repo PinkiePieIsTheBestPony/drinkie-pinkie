@@ -1,12 +1,12 @@
-const discord = require('./external-libs/discord.js')
-const derpi = require('./external-libs/derpi');
-const post = require('./post');
-const game = require('./games');
-const talk = require('./talk');
-const dailyponk = require('./dailyponk');
-const sound = require('./sound');
-const rotationQuery = require('./rotationQuery');
-const { prefix } = require('./config');
+import {createEmbeddedHelp} from './external-libs/discord.js';
+import {getDerpibooruImage} from './external-libs/derpi.js';
+import {send} from './post.js';
+import {botGames} from './games.js';
+import {jsonConvertor, randomNumber, decision, getPrompts} from './talk.js';
+import {botPonkSearch} from './dailyponk.js';
+import {join, leave, addToQueue, addPlaylistToQueue, removeFromQueue, clearQueue, showList, pause, next, prev} from './sound.js';
+import {randomEdit, rotationEdit, rotationList, queryNew, queryList, queryRemove, queryEdit, channelEdit, channelDefaultEdit, filterEdit} from './rotationQuery.js';
+import { prefix } from './config.js';
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -21,7 +21,7 @@ function botMessage(msg, client) {
         let validResponse = false;
 
         collector.on('collect', m => {
-            let response = talk.jsonConvertor(m.content, msg);
+            let response = jsonConvertor(m.content, msg);
             if (response) {
                 validResponse = true;
                 collector.stop();
@@ -60,18 +60,18 @@ async function botGetImg(msg, client) {
     }
     else {
         try {
-            let returnedImage = await derpi.getDerpibooruImage(msg.content, null, msg.channel.nsfw)
+            let returnedImage = await getDerpibooruImage(msg.content, null, msg.channel.nsfw)
             if (returnedImage !== undefined) {
-                post.send(returnedImage, true, msg, client, '', null, null);
+                send(returnedImage, true, msg, client, '', null, null);
             }
             else {
                 msg.reply("Your query did not yield any results.");
             }
         } catch (response) {
             if (response == undefined) {
-                msg.channel.send("Unknown error...")
+                msg.reply("Unknown error...")
             } else {
-                msg.channel.send("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
+                msg.reply("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
                 console.log(response);
             }
         }
@@ -84,7 +84,7 @@ async function botGetImg(msg, client) {
  * @param {object} msg Message object, generated based on message by user
  */
 function botGetHelp(msg) {
-    msg.type.reply({embeds: [discord.createEmbeddedHelp(msg.content)]});
+    msg.type.reply({embeds: [createEmbeddedHelp(msg.content)]});
 }
 
 /**
@@ -96,8 +96,8 @@ function botGetRndNum(msg) {
     let number = msg.content.replace(prefix + ' random ', '');
     if (!isNaN(number)) {
         if (number >= 1 && number <= 10) {
-            botNum = talk.randomNumber(1, 10);
-            talk.decision(number, botNum, msg);
+            botNum = randomNumber(1, 10);
+            decision(number, botNum, msg);
         }
         else {
             msg.reply("Needs to be between 1 and 10. Please try command again with a valid number.")
@@ -114,17 +114,17 @@ function botGetRndNum(msg) {
  * @param {object} msg Message object, generated based on message by user
  */
 function botSettingsEdit(msg) {
-    settingsKeyPair = new Map([
-        ["random edit", rotationQuery.randomEdit],
-        ["rotation edit", rotationQuery.rotationEdit],
-        ["rotation list", rotationQuery.rotationList],
-        ["query new", rotationQuery.queryNew],
-        ["query list", rotationQuery.queryList],
-        ["query remove", rotationQuery.queryRemove],
-        ["query edit", rotationQuery.queryEdit],
-        ["channel edit", rotationQuery.channelEdit],
-        ["channel default", rotationQuery.channelDefaultEdit],
-        ["filter edit", rotationQuery.filterEdit]
+    const settingsKeyPair = new Map([
+        ["random edit", randomEdit],
+        ["rotation edit", rotationEdit],
+        ["rotation list", rotationList],
+        ["query new", queryNew],
+        ["query list", queryList],
+        ["query remove", queryRemove],
+        ["query edit", queryEdit],
+        ["channel edit", channelEdit],
+        ["channel default", channelDefaultEdit],
+        ["filter edit", filterEdit]
     ]);
 
     let functionName = settingsKeyPair.get(msg.content.split(' ').slice(0, 2).join(' '));
@@ -153,7 +153,7 @@ function randomStuff(length, array) {
     let totalRandom = 0;
     let arrayOfValues = [];
     for (let i = 0; i < length; i++) {
-        let num = talk.randomNumber(0, 101);
+        let num = randomNumber(0, 101);
         totalRandom += num;
         arrayOfValues.push(num / length);
     }
@@ -180,7 +180,7 @@ function botPredict(msg) {
             }
             else if (splitArgs[1].substr(0, 2) === "''") {
                 if (removedArgs[1] !== undefined) {
-                    msg.type.reply("Query: `" + removedArgs[1] + "`\n Drinkie has estimated there is a " + talk.randomNumber(0, 101) + "% chance!" )
+                    msg.type.reply("Query: `" + removedArgs[1] + "`\n Drinkie has estimated there is a " + randomNumber(0, 101) + "% chance!" )
                 } else {
                     msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
                 }
@@ -213,7 +213,7 @@ function botPredict(msg) {
             else if (splitArgs[1].substr(0, 2) === "''") {
                 if (removedArgs[2] !== undefined) {
                     let matchups = removedArgs[2].trim().split(",");
-                    msg.type.reply("Question: `" + removedArgs[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[talk.randomNumber(0, matchups.length)].trim() + "`");
+                    msg.type.reply("Question: `" + removedArgs[1] + "`\n Choices are:\n" + matchups.map(x => "- " + x.trim() + "\n").join('') + "Drinkie has chosen: `" + matchups[randomNumber(0, matchups.length)].trim() + "`");
                 } else {
                     msg.type.reply("Invalid syntax. Use 2 apostrophes independently `''` (not quotation mark) for the end of your message.")
                 }
@@ -235,7 +235,7 @@ function botBroadcast(msg, client) {
             let serverType = remainingArgs.trim().split(' ')[0];
             let message = remainingArgs.substr(remainingArgs.indexOf(' ')+1);
             if (serverType === "all") {
-                post.send(null, false, null, client, message, null, null)
+                send(null, false, null, client, message, null, null)
             } else if (/\d/.test(serverType)) {
                 let servers = serverType.split(',');
                 let server = [...client.guilds.cache.values()].filter((guild) => {
@@ -247,7 +247,7 @@ function botBroadcast(msg, client) {
                     }
                 });
                 if (server.length > 0) {
-                    post.send(null, false, null, client, message, server, null)
+                    send(null, false, null, client, message, server, null)
                 } else {
                     msg.reply("Invalid input.")
                 }
@@ -261,24 +261,24 @@ function botBroadcast(msg, client) {
 }
 
 function botSounds(msg) {
-    optionKeyPair = new Map([
-        ["queue join", sound.join],
-        ["queue leave", sound.leave],
-        ["queue add", sound.addToQueue],
-        ["queue addPlaylist", sound.addPlaylistToQueue],
-        ["queue remove", sound.removeFromQueue],
-        ["queue clear", sound.clearQueue],
-        ["queue list", sound.showList],
-        ["queue pause", sound.pause],
-        ["queue next", sound.next],
-        ["queue prev", sound.prev],
+    const optionKeyPair = new Map([
+        ["queue join", join],
+        ["queue leave", leave],
+        ["queue add", addToQueue],
+        ["queue addplaylist", addPlaylistToQueue],
+        ["queue remove", removeFromQueue],
+        ["queue clear", clearQueue],
+        ["queue list", showList],
+        ["queue pause", pause],
+        ["queue next", next],
+        ["queue prev", prev],
     ]);
 
-    optArgsList = ['notif'];
-    optionalArgs = {'notif': true};
+    const optArgsList = ['notif'];
+    const optionalArgs = {'notif': true};
 
     msg.content = msg.content.replace(/ --(.*?)=(true|false)/g, (matchedOpt, $1, $2) => {
-        for (i = 0; i < optArgsList.length; i++) {
+        for (let i = 0; i < optArgsList.length; i++) {
             if (optArgsList[i]==$1 && ($2 === 'true' || $2 === 'false')) {
                 switch ($1) {
                     case "notif": {
@@ -304,15 +304,15 @@ function botSounds(msg) {
  * @public
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
-const possibleResponses = (msg, client) => {
-    responsesKeyPair = new Map([
+export const possibleResponses = (msg, client) => {
+    const responsesKeyPair = new Map([
         [prefix + " msg ", botMessage],
         [prefix + " img ", botGetImg],
         [prefix + " help ", botGetHelp],
         [prefix + " random ", botGetRndNum],
         [prefix + " settings ", botSettingsEdit],
-        [prefix + " game ", game.botGames],
-        [prefix + " dailyponk ", dailyponk.botPonkSearch],
+        [prefix + " game ", botGames],
+        [prefix + " dailyponk ", botPonkSearch],
         [prefix + " source ", botSource],
         [prefix + " predict ", botPredict],
         [prefix + " broadcast ", botBroadcast],
@@ -320,7 +320,7 @@ const possibleResponses = (msg, client) => {
     ]);
 
     if (msg.mentions.has(client.user)) {
-        talk.getPrompts(msg, client);
+        getPrompts(msg, client);
     } else if (msg.author.bot) {return}
 
     //gets first two words of message to check which command it is trying to check
@@ -344,15 +344,15 @@ const possibleResponses = (msg, client) => {
  * @public
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
- const possibleResponsesSlash = (interaction, client) => {
+export const possibleResponsesSlash = (interaction, client) => {
     const responsesKeyPair = new Map([
         ["msg", botMessage],
         ["img", botGetImg],
         ["help", botGetHelp],
         ["random", botGetRndNum],
         ["settings", botSettingsEdit],
-        ["game", game.botGames],
-        ["dailyponk", dailyponk.botPonkSearch],
+        ["game", botGames],
+        ["dailyponk", botPonkSearch],
         ["source", botSource],
         ["predict", botPredict],
         ["sounds", botSounds]
@@ -390,7 +390,7 @@ const possibleResponses = (msg, client) => {
     ]);
     
     const sounds = new Map([
-        ["queue", {"join": "args", "leave": "args", "add": ["url", "args"], "remove": ["index", "args"], "clear": "args", "list": "args", "pause": "args", "next": "args", "prev": "args"}]
+        ["queue", {"join": "args", "leave": "args", "add": ["url", "args"], "addplaylist": ["playlistid", "args"], "remove": ["index", "args"], "clear": "args", "list": "args", "pause": "args", "next": "args", "prev": "args"}]
     ]);
     
     let functionName = responsesKeyPair.get(interaction.commandName);
@@ -403,7 +403,7 @@ const possibleResponses = (msg, client) => {
         values.push(interaction.options.getSubcommandGroup(), interaction.options.getSubcommand());
         if (specificArgs !== null) {
             if (Array.isArray(specificArgs)) {
-                for (i = 0; i < specificArgs.length; i++) {
+                for (let i = 0; i < specificArgs.length; i++) {
                     values.push(interaction.options.getString(specificArgs[i]));
                 }
             } else {
@@ -418,7 +418,7 @@ const possibleResponses = (msg, client) => {
         values.push(interaction.options.getSubcommandGroup(), interaction.options.getSubcommand());
         if (specificArgs !== null) {
             if (Array.isArray(specificArgs)) {
-                for (i = 0; i < specificArgs.length; i++) {
+                for (let i = 0; i < specificArgs.length; i++) {
                     values.push(interaction.options.getString(specificArgs[i]));
                 }
             } else {
@@ -454,6 +454,3 @@ const possibleResponses = (msg, client) => {
         functionName({content: values, channel: interaction.channel, type: interaction, author: interaction.member, guild: interaction.guild, member: interaction.member, client: interaction.client}, client);
     }
 }
-
-exports.possibleResponses = possibleResponses;
-exports.possibleResponsesSlash = possibleResponsesSlash;

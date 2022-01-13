@@ -1,21 +1,21 @@
-const discord = require('./external-libs/discord');
-const derpi = require('./external-libs/derpi.js');
-const initDB = require('./db/initDB');
-const dbQueries = require('./db/dbQuery');
-const cron = require('./cron');
-const responses = require('./response');
-const nodeCron = require('cron');
-const post = require('./post');
-const { discord_key, prefix } = require('./config');
+import {initialiseDiscordJS} from './external-libs/discord.js';
+import {getDerpibooruImage} from './external-libs/derpi.js';
+import {initialiseDB} from './db/initDB.js';
+import {selectAllStatementDB, insertGuildDetails, removeStatementDB} from './db/dbQuery.js';
+import {cronChecker} from './cron.js';
+import {possibleResponses, possibleResponsesSlash} from './response.js';
+import nodeCron from 'cron';
+import {send} from './post.js';
+import { discord_key, prefix } from './config.js';
 
 /**
  * Initialises Drinkie client user, along with the DB and Twitter connectivity.
  */
-const client = discord.initialiseDiscordJS();
-initDB.initialiseDB();
+const client = initialiseDiscordJS();
+initialiseDB();
 
 async function autoPostLoop(client) {
-    let allRotationsForServers = dbQueries.selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
+    let allRotationsForServers = selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
     if (allRotationsForServers != '') {
         let allRotationsForServersArray = allRotationsForServers.split('\n');
         for (let i = 0; i < allRotationsForServersArray.length; i++) {
@@ -23,15 +23,15 @@ async function autoPostLoop(client) {
             let rotationQuery = resultArray[1];
             let rotationServerID = resultArray[2];
             let serverID = resultArray[3];
-            let channelQueryForServer = dbQueries.selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+            let channelQueryForServer = selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
             if (channelQueryForServer !== "noChannelFoundForDrinkie") {
-                if (cron.cronChecker(rotationQuery)) {
-                    let query = dbQueries.selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
-                    let filter = dbQueries.selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+                if (cronChecker(rotationQuery)) {
+                    let query = selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+                    let filter = selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
                     try {
-                        let imageReturned = await derpi.getDerpibooruImage(query, filter, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
+                        let imageReturned = await getDerpibooruImage(query, filter, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
                         if (imageReturned !== undefined) {
-                            post.send(imageReturned, false, null, client, '', serverID, channelQueryForServer);
+                            send(imageReturned, false, null, client, '', serverID, channelQueryForServer);
                         } else {
                             client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
                         }
@@ -55,7 +55,7 @@ async function autoPostLoop(client) {
 client.on('ready', () => {
     client.user.setActivity(prefix + ' help or /help');
     [...client.guilds.cache.values()].forEach(guild => {
-        dbQueries.insertGuildDetails(guild);
+        insertGuildDetails(guild);
     });
     nodeCron.job(
         '0 * * * * *',
@@ -73,24 +73,24 @@ client.on('ready', () => {
 
 client.on('guildDelete', guild => {
     if (guild.available) {
-        dbQueries.removeStatementDB("p_rotation", ["server_id"], [guild.id]);
-        dbQueries.removeStatementDB("p_queries", ["server_id"], [guild.id]);
-        dbQueries.removeStatementDB("p_queue", ["server_id"], [guild.id]);
-        dbQueries.removeStatementDB("p_server", ["server_id"], [guild.id]);
+        removeStatementDB("p_rotation", ["server_id"], [guild.id]);
+        removeStatementDB("p_queries", ["server_id"], [guild.id]);
+        removeStatementDB("p_queue", ["server_id"], [guild.id]);
+        removeStatementDB("p_server", ["server_id"], [guild.id]);
     }
 });
 
 client.on('guildCreate', guild => {
-    dbQueries.insertGuildDetails(guild);
+    insertGuildDetails(guild);
 });
 
 client.on('messageCreate', msg => {
-    responses.possibleResponses(msg, client);
+    possibleResponses(msg, client);
 });
 
 client.on('interactionCreate', interaction => {
     if (!interaction.isCommand()) return;
-    responses.possibleResponsesSlash(interaction, client);
+    possibleResponsesSlash(interaction, client);
 });
 
 client.login(discord_key);

@@ -1,12 +1,12 @@
-const db = require('./db');
+import {dbConnect} from './db.js';
 
 /**
  * DB insert query shortcuts
  * @param {string} insertTable Table to insert data into
  * @param {string[]} dbArgs Rest parameter which contains all arguments needed for insert DB statements
  */
-const insertStatementDB = (insertTable, ...dbArgs) => {
-    let dbCon = db.dbConnect();
+export const insertStatementDB = (insertTable, ...dbArgs) => {
+    let dbCon = dbConnect();
 
     let argsNumbered = dbArgs.map((name, i) => "$"+(i+1)).join(",")
     
@@ -23,12 +23,12 @@ const insertStatementDB = (insertTable, ...dbArgs) => {
  * @param {string} equalsTo Relation between column and answer
  * @param {string} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
  */
-const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, whereAnswer) => {
+export const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, whereAnswer) => {
     let allResults = '';
     let statement = '';
     let columnArray = selectColumns.split(", ");
     
-    let dbCon = db.dbConnect();
+    let dbCon = dbConnect();
 
     if (whereColumn != null) {
         statement = ' WHERE ' + whereColumn.map((column, i) => i === 0 || column.length === 1 ? `${column} ${equalsTo} $${i+1} ` : `AND ${column} ${equalsTo} $${i+1}`).join("")
@@ -72,10 +72,10 @@ const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, where
  * @param {string} whereColumn Identification clarification to help determine which data will be selected (the specific column where the data is)
  * @param {string} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
  */
-const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) => {
-    let dbCon = db.dbConnect();
+export const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) => {
+    let dbCon = dbConnect();
 
-    statement = whereColumns.map((column, i) => i === (whereColumns.length-1) && i !== 0 ? " AND " + column + " = $" + (i+2) : column + " = $" + (i+2)).join("");
+    let statement = whereColumns.map((column, i) => i === (whereColumns.length-1) && i !== 0 ? " AND " + column + " = $" + (i+2) : column + " = $" + (i+2)).join("");
     dbCon.querySync("UPDATE " + table + " SET " + setColumn + " = $1 WHERE " + statement, whereAnswers)
     
     dbCon.end();
@@ -88,8 +88,8 @@ const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) => {
  * @param {string} whereColumn The specific column where data will be removed from.
  * @param {string} whereAnswer The identifier to help clarify which data will be removed
  */
-const removeStatementDB = (table, whereColumns, whereAnswers) => {
-    let dbCon = db.dbConnect();
+export const removeStatementDB = (table, whereColumns, whereAnswers) => {
+    let dbCon = dbConnect();
 
     let statement = whereColumns.map((column, i) => i === (whereColumns.length-1) && i !== 0 ? " AND " + column + " = $" + (i+1) : column + " = $" + (i+1)).join("");
 
@@ -103,9 +103,9 @@ const removeStatementDB = (table, whereColumns, whereAnswers) => {
  * @public
  * @param {object} guild Represents Discord server (the server that Drinkie tries to initalise herself on)
  */
-const insertGuildDetails = (guild) => {
-    pQuery = "pinkie pie, safe, solo, !webm, score.gte:100";
-    pRotation = "0 0/6 * * *";
+export const insertGuildDetails = (guild) => {
+    let pQuery = "pinkie pie, safe, solo, !webm, score.gte:100";
+    let pRotation = "0 0/6 * * *";
 
     let guildInfo = selectAllStatementDB("server_id", "p_server", ["server_id"], "=", [guild.id]);
     if (guildInfo !== guild.id) {
@@ -124,9 +124,3 @@ const insertGuildDetails = (guild) => {
         insertStatementDB("p_queue(server_id, queue_data)", guild.id, 'noDataFoundInQueue');
     }
 }
-
-exports.selectAllStatementDB = selectAllStatementDB;
-exports.insertStatementDB = insertStatementDB;
-exports.removeStatementDB = removeStatementDB;
-exports.updateStatementDB = updateStatementDB;
-exports.insertGuildDetails = insertGuildDetails;

@@ -1,5 +1,5 @@
-const jsonRead = require('./json/jsonReader.js');
-const {prefix} = require('./config');
+import {getJSONFile} from './json/jsonReader.js';
+import {prefix} from './config.js';
 
 /**
  * Reads JSON file which contains all the information regarding https://twitter.com/KurogeWaPony daily ponk image posting. Replies with the relevant image.
@@ -9,7 +9,7 @@ const {prefix} = require('./config');
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
 function ponkJSONLookup(searchType, searchValue, msg) {
-    let fileJSON = jsonRead.getJSONFile("dailyponk.json");
+    let fileJSON = getJSONFile("dailyponk.json");
     if (!searchValue.includes("-")) {
         let d = new Date("2019-08-12");
         d.setDate(d.getDate() + parseInt(searchValue));
@@ -29,7 +29,7 @@ function ponkJSONLookup(searchType, searchValue, msg) {
  * @public
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
-const botPonkSearch = (msg) => {
+export const botPonkSearch = (msg) => {
     let driValQuery = msg.content.replace(prefix + ' dailyponk ', '');
     let driValArr = driValQuery.split(" ");
     if (driValArr.length == 2) {
@@ -109,5 +109,3 @@ const botPonkSearch = (msg) => {
         msg.type.reply("Number of arguments is wrong! You should have the following arguments - type:`day|bonuses` & value:`date[ex.2019-10-31]|index[ex.69]|random`")
     }
 }
-
-exports.botPonkSearch = botPonkSearch;

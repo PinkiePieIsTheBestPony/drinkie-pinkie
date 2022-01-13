@@ -1,5 +1,5 @@
-const discord = require('./external-libs/discord');
-const dbQuery = require('./db/dbQuery');
+import {createEmbeddedImg} from './external-libs/discord.js';
+import {selectAllStatementDB} from './db/dbQuery.js';
 
 /**
  * Where all posts which either require an image attached, or contain a Derpibooru request are posted (including the scheduled posts).
@@ -11,27 +11,25 @@ const dbQuery = require('./db/dbQuery');
  * @param {string} message Sometimes images are sent with a message (Daily Pinkie Pie).
  * @param {string} serverID The specific ID of the Server in which the bot is sending the image to, so it only sends to that server (in most cases).
  */
-const send = (derpiObject, isRequest, messageObject, client, message, serverID, channelQueryForServer) => {
+export const send = (derpiObject, isRequest, messageObject, client, message, serverID, channelQueryForServer) => {
     if (channelQueryForServer != null && !isRequest && messageObject == null && serverID != null) {
-        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({embeds: [discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});   
+        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({embeds: [createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});   
     } else if (isRequest == false && channelQueryForServer == null && derpiObject == null) {
         if (serverID != null) {
             serverID.forEach(guild => {
-                let channelName = guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]));
+                let channelName = guild.channels.cache.find(channel => "<#" + channel.id + ">" === selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]));
                 if (channelName !== undefined) {
                     channelName.send({content: message});
                 }
             }); 
         } else {
             [...client.guilds.cache.values()].forEach(guild => {
-                let channelName = guild.channels.cache.find(channel => "<#" + channel.id + ">" === dbQuery.selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]))
+                let channelName = guild.channels.cache.find(channel => "<#" + channel.id + ">" === selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]))
                 if (channelName !== undefined) {
                     channelName.send({content: message})
                 }});
         }
     } else {
-        messageObject.type.reply({ content: "Result of your query: `" + messageObject.content + "`", embeds: [discord.createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});
+        messageObject.type.reply({ content: "Result of your query: `" + messageObject.content + "`", embeds: [createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});
     }
 }
-
-exports.send = send;

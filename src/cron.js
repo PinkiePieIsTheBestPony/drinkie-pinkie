@@ -20,8 +20,8 @@ function nth(number) {
  */
 function quickConvert(number, index) {
     number -= 1;
-    daysOfMonth = ['January', 'Feburary', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const daysOfMonth = ['January', 'Feburary', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     switch (index) {
         case 3: {
             return daysOfMonth[number];
@@ -38,7 +38,7 @@ function quickConvert(number, index) {
  * @public
  * @param {string} query The cron query to check.
  */
-const cronChecker = (query) => {
+export const cronChecker = (query) => {
     //date stuff
     let d = new Date();
     let dateArray = [d.getMinutes(), d.getHours(), d.getDate(), d.getMonth(), d.getDay()]
@@ -103,13 +103,13 @@ const cronChecker = (query) => {
  * @public
  * @param {string} argument The cron query to validate.
  */
-const cronValidator = (argument) => {
+export const cronValidator = (argument) => {
     const cronPattern = /((\* |\d{1,2} |\d{1,2}-\d{1,2} |(\d{1,2},)+\d{1,2} |\d{1,2}\/\d{1,2} ){4}(\*|\d{1,2}\/\d{1,2}|\d{1,2}-\d{1,2}|(\d{1,2},)+\d{1,2}|\d{1,2}))/;
     const cronParametersWords = {0: ["minute", 59, 0], 1: ["hour", 23, 0], 2: ["day of the month", 31, 1], 3: ["month", 12, 1], 4: ["day of the week", 7, 1]};
     let messageToSend = "I will send a new image: ";
     if (cronPattern.exec(argument) && argument.split(" ").length == 5) {
         let arrayCron = argument.split(" ");
-        for (i = 0; i < arrayCron.length; i++) {
+        for (let i = 0; i < arrayCron.length; i++) {
             let maxLimit = cronParametersWords[i][1];
             if (i > 1) maxLimit--;
             if (arrayCron[i] === "*") {
@@ -176,6 +176,3 @@ const cronValidator = (argument) => {
     }
     return messageToSend.slice(0, -2);
 }
-
-exports.cronChecker = cronChecker;
-exports.cronValidator = cronValidator;

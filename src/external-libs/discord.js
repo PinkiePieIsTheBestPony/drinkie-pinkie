@@ -1,26 +1,26 @@
-const { Client, Intents, MessageEmbed } = require('discord.js');
-const reader = require('../json/jsonReader');
-const derpi = require('./derpi.js');
+import { Client, Intents, MessageEmbed } from 'discord.js';
+import {getJSONFile} from '../json/jsonReader.js';
+import {getArtistDetails} from './derpi.js';
 
 /**
  * Initialise Drinkie
  * @public
  */
-const initialiseDiscordJS = () => {
-    return new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES], partials: ['CHANNEL']});
+export const initialiseDiscordJS = () => {
+    return new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILD_VOICE_STATES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], partials: ['CHANNEL']});
 }
 
 /**
  * Reads a JSON file and creates a new messageEmbed object to be sent which a user needs help
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
-const createEmbeddedHelp = (msg) => {
-    let parsedData = reader.getJSONFile('help.json')
+export const createEmbeddedHelp = (msg) => {
+    let parsedData = getJSONFile('help.json')
     if (msg === null) {
         let generalData = parsedData["help"]["general"];
         return new MessageEmbed()
         .setTitle(generalData["title"])
-        .setAuthor(generalData["author"])
+        .setAuthor({name: generalData["author"]})
         .setColor(generalData["color"])
         .setDescription(generalData["description"])
         .addField("Commands", generalData["fields"]["Commands"])
@@ -32,7 +32,7 @@ const createEmbeddedHelp = (msg) => {
         let queryData = parsedData["help"]["query"];
         return new MessageEmbed()
         .setTitle(queryData["title"])
-        .setAuthor(queryData["author"])
+        .setAuthor({name: queryData["author"]})
         .setColor(queryData["color"])
         .setDescription(queryData["description"])
         .addField("Commands", queryData["fields"]["Commands"])
@@ -41,7 +41,7 @@ const createEmbeddedHelp = (msg) => {
         let rotationData = parsedData["help"]["rotation"];
         return new MessageEmbed()
         .setTitle(rotationData["title"])
-        .setAuthor(rotationData["author"])
+        .setAuthor({name: rotationData["author"]})
         .setColor(rotationData["color"])
         .setDescription(rotationData["description"])
         .addField("Commands", rotationData["fields"]["Commands"])
@@ -71,7 +71,7 @@ const createEmbeddedHelp = (msg) => {
     }
 }
 
-const createEmbeddedImg = (derpiObj, attachment) => {
+export const createEmbeddedImg = (derpiObj, attachment) => {
     return new MessageEmbed()
     .setTitle("Derpibooru Image")
     .setURL("https://derpibooru.org/" + derpiObj["id"])
@@ -80,15 +80,15 @@ const createEmbeddedImg = (derpiObj, attachment) => {
         { name: "Score", value: derpiObj["score"] + "(+" + derpiObj["upvotes"] + "/-" + derpiObj["downvotes"] + ")".toString(), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
         { name: "Faves", value: derpiObj["faves"].toString(), inline: true },
-        { name: "Artist", value: derpi.getArtistDetails(derpiObj["tags"]).toString(), inline: true },
+        { name: "Artist", value: getArtistDetails(derpiObj["tags"]).toString(), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
         { name: "Uploaded by", value: derpiObj["uploader"] === null ? 'Anonymous' : derpiObj["uploader"], inline: true }
     )
     .setImage(attachment)
-    .setFooter("Drinkie Pinkie - Made with 💜")
+    .setFooter({text: "Drinkie Pinkie - Made with 💜"})
 }
 
-const createQueueList = (prevQueue, newQueue, prevInQueue, nextInQueue, currentlyPlaying) => {
+export const createQueueList = (prevQueue, newQueue, prevInQueue, nextInQueue, currentlyPlaying) => {
     return new MessageEmbed()
     .setTitle("YouTube Queue")
     .addFields(
@@ -98,8 +98,3 @@ const createQueueList = (prevQueue, newQueue, prevInQueue, nextInQueue, currentl
     .addField("Prev Tracklist", prevInQueue)
     .addField("Next Tracklist", nextInQueue)
 }
-
-exports.initialiseDiscordJS = initialiseDiscordJS;
-exports.createEmbeddedHelp = createEmbeddedHelp;
-exports.createEmbeddedImg = createEmbeddedImg;
-exports.createQueueList = createQueueList;
