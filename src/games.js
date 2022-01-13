@@ -50,7 +50,7 @@ function fillBoard(filledSlots, indexSlots, board) {
     let slotToEmoji = {"X": "❌", "O": "⭕" }
     let length = Object.keys(filledSlots).length;
     let modifiedBoard = board;
-    for (i = 1; i < length+1; i++) {
+    for (let i = 1; i < length+1; i++) {
         let slotValue = filledSlots[i];
         if (slotValue != null) {
             let emojiValue = slotToEmoji[slotValue]
@@ -124,9 +124,9 @@ async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlo
             }
         }
 
-        const filter = (reaction, user) => { return user.id == player[0] && (reaction.emoji.name == "1️⃣" || reaction.emoji.name == "2️⃣" || reaction.emoji.name == "3️⃣" || reaction.emoji.name == "4️⃣" || 
+        let filterGame = (reaction, user) => { return user.id == player[0] && (reaction.emoji.name == "1️⃣" || reaction.emoji.name == "2️⃣" || reaction.emoji.name == "3️⃣" || reaction.emoji.name == "4️⃣" || 
         reaction.emoji.name == "5️⃣" || reaction.emoji.name == "6️⃣" || reaction.emoji.name == "7️⃣" || reaction.emoji.name == "8️⃣" || reaction.emoji.name == "9️⃣") };
-        const collector = await msgGame.createReactionCollector(filter);
+        const collector = msgGame.createReactionCollector(filterGame);
 
         collector.on('collect', (reaction, user) => {
             if (user.id == player[0]) {
@@ -139,7 +139,7 @@ async function sendBoard(msg, player, numToWord, numberOfTurns, board, filledSlo
         collector.on('end', collected => {
             numberOfTurns--;
             if (numberOfTurns < 7) {
-                result = validate(filledSlots, player[1]);
+                let result = validate(filledSlots, player[1]);
                 if (result) {
                     board = fillBoard(filledSlots, indexSlots, board);
                     msg.channel.send(board + "\nCongrats <@!" + player[0] + ">, you have won!");
@@ -195,7 +195,7 @@ function playTTT(players, msg) {
  * @param {object} msg [Discord.js] Message object representation of message that kicked off game.
  */
 function init(gameName, players, msg) {
-    responsesKeyPair = new Map([
+    const responsesKeyPair = new Map([
         ["tictactoe", playTTT]
     ]);
 
@@ -210,7 +210,7 @@ function init(gameName, players, msg) {
  * @private
  * @param {object} msg Message object, generated based on message by user
  */
- const botGames = (msg) => {
+export const botGames = (msg) => {
     //let remainingArgs = msg.content.replace(prefix + ' game ', '');
     if (msg.content.startsWith("tictactoe <@")) {
         const regex = /.* <@!([0-9]+)>/
@@ -251,5 +251,3 @@ function init(gameName, players, msg) {
         }
     }
 }
-
-exports.botGames = botGames;
