@@ -1,8 +1,8 @@
-const dbQuery = require('./db/dbQuery');
-const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, entersState, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType } = require('@discordjs/voice');
-const ytdl = require("ytdl-core");
-const ytpl = require('ytpl');
-const discord = require('./external-libs/discord');
+import {selectAllStatementDB, updateStatementDB} from './db/dbQuery.js';
+import { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, entersState, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType } from '@discordjs/voice';
+import ytdl from "ytdl-core";
+import ytpl from 'ytpl';
+import {createQueueList} from './external-libs/discord.js';
 
 let allAudioPlayers = '';
 let allPauseStates = '';
@@ -11,11 +11,11 @@ let allStates = '';
 let allOptsGbl = '';
 
 function accessQueue(serverID) {
-    return dbQuery.selectAllStatementDB("queue_data", "p_queue", ["server_id"], "=", [serverID]);
+    return selectAllStatementDB("queue_data", "p_queue", ["server_id"], "=", [serverID]);
 }
 
 function updateQueue(serverID, queueData) {
-    dbQuery.updateStatementDB("p_queue", "queue_data", ["server_id"], [queueData, serverID]);
+    updateStatementDB("p_queue", "queue_data", ["server_id"], [queueData, serverID]);
 }
 
 function nextSong(queue, serverID, msg) {
@@ -136,7 +136,7 @@ function voiceStatus(serverID, msg) {
     })
 }
 
-const join = (msg, optArgs) => {
+export const join = (msg, optArgs) => {
     allOptsGbl = optArgs;
     let connection = getVoiceConnection(msg.guild.id);
     if (typeof connection == 'undefined') {
@@ -172,13 +172,13 @@ function safelyRemove(msg) {
     allStates.delete(msg.guild.id);
 }
 
-const leave = (msg, optArgs) => {
+export const leave = (msg, optArgs) => {
     allOptsGbl = optArgs;
     (allOptsGbl.notif) ? msg.type.reply("Leaving voice channel!") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "Leaving voice channel!"}) : "";
     safelyRemove(msg);
 }
 
-async function addToQueue(msg, optArgs) {
+export async function addToQueue(msg, optArgs) {
     allOptsGbl = optArgs;
     let queue = accessQueue(msg.guild.id);
     if (queue === "noDataFoundInQueue") {
@@ -198,7 +198,7 @@ async function addToQueue(msg, optArgs) {
     }
 }
 
-async function addPlaylistToQueue(msg, optArgs) {
+export async function addPlaylistToQueue(msg, optArgs) {
     allOptsGbl = optArgs;
     let queue = accessQueue(msg.guild.id);
     if (queue === "noDataFoundInQueue") {
@@ -206,21 +206,21 @@ async function addPlaylistToQueue(msg, optArgs) {
     } else {
         queue = JSON.parse(queue);
     }
-    let isValidPlaylist = ytpl.validateID(msg.content);
+    let isValidPlaylist = ytpl.validateID(msg.content.trim());
     if (isValidPlaylist) {
-        let playlist = await ytpl(msg.content);
+        let playlist = await ytpl(msg.content.trim());
         for (let i = 0; i < playlist.items.length; i++) {
             let sound = {title: playlist.items[i].title, url: playlist.items[i].shortUrl};
             queue.push(sound);
-            updateQueue(msg.guild.id, JSON.stringify(queue));
         }
+        updateQueue(msg.guild.id, JSON.stringify(queue));
         (allOptsGbl.notif) ? msg.type.reply(`Added ${playlist.items.length} songs to the queue!`) : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: `Added ${playlist.items.length} songs to the queue!`}) : "";
     } else {
         (allOptsGbl.notif) ? msg.type.reply("Invalid URL. Please remember to only enter playlist IDs from YT, and enter one at a time.") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "Invalid URL. Please remember to only enter playlist IDs from YT, and enter one at a time."}) : "";
     }
 }
 
-const removeFromQueue = (msg, optArgs) => {
+export const removeFromQueue = (msg, optArgs) => {
     allOptsGbl = optArgs;
     let queue = accessQueue(msg.guild.id);
     if (queue !== "noDataFoundInQueue") {
@@ -241,13 +241,29 @@ const removeFromQueue = (msg, optArgs) => {
     }
 }
 
-const clearQueue = (msg, optArgs) => {
+export const clearQueue = (msg, optArgs) => {
     allOptsGbl = optArgs;
-    updateQueue(msg.guild.id, "noDataFoundInQueue");
-    (allOptsGbl.notif) ? msg.type.reply("Queue cleared!") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "Queue cleared!"}) : "";
+    let queue = accessQueue(msg.guild.id);
+    if (queue !== "noDataFoundInQueue") {
+        if (allPrevSongs !== '') {
+            let nextMsgQueue = JSON.parse(queue);
+            if (nextMsgQueue.length < 2) {
+                (allOptsGbl.notif) ? msg.type.reply("Nothing to clear.") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "Nothing to clear."}) : "";
+            } else {
+                let queueCount = nextMsgQueue.length;
+                for (let i = 1; i < queueCount; i++) {
+                    nextMsgQueue.pop();
+                }
+                updateQueue(msg.guild.id, JSON.stringify(nextMsgQueue));
+                (allOptsGbl.notif) ? msg.type.reply("Queue cleared!") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "Queue cleared!"}) : "";
+            }
+        }
+    } else {
+        (allOptsGbl.notif) ? msg.type.reply("Empty queue.") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "Empty queue."}) : "";
+    }
 }
 
-const next = (msg, optArgs) => {
+export const next = (msg, optArgs) => {
     allOptsGbl = optArgs;
     if (allAudioPlayers !== '') {
         let queue = accessQueue(msg.guild.id);
@@ -266,7 +282,7 @@ const next = (msg, optArgs) => {
     }
 }
 
-const prev = (msg, optArgs) => {
+export const prev = (msg, optArgs) => {
     allOptsGbl = optArgs;
     if (allAudioPlayers !== '') {
         let queue = accessQueue(msg.guild.id);
@@ -285,7 +301,7 @@ const prev = (msg, optArgs) => {
     }
 }
 
-const pause = (msg, optArgs) => {
+export const pause = (msg, optArgs) => {
     allOptsGbl = optArgs;
     if (allAudioPlayers !== '') {
         let audio = allAudioPlayers.get(msg.guild.id)
@@ -315,7 +331,7 @@ const pause = (msg, optArgs) => {
     }
 }
 
-const showList = (msg, optArgs) => {
+export const showList = (msg, optArgs) => {
     allOptsGbl = optArgs;
     let queue = accessQueue(msg.guild.id);
     if (queue === "noDataFoundInQueue") {
@@ -354,20 +370,9 @@ const showList = (msg, optArgs) => {
                 }
             }
             
-            (!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND") ? msg.type.reply({ephemeral: true, embeds: [discord.createQueueList(prevMsgQueue, nextMsgQueue, prevDetails, nextDetails, currentDetail)]}) : msg.type.reply({embeds: [discord.createQueueList(prevMsgQueue, nextMsgQueue, prevDetails, nextDetails, currentDetail)]});
+            (!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND") ? msg.type.reply({ephemeral: true, embeds: [createQueueList(prevMsgQueue, nextMsgQueue, prevDetails, nextDetails, currentDetail)]}) : msg.type.reply({embeds: [createQueueList(prevMsgQueue, nextMsgQueue, prevDetails, nextDetails, currentDetail)]});
         } else {
             (!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND") ? msg.type.reply({ephemeral: true, content: "Needed to have started music..."}) : msg.type.reply("Needed to have started music...")
         }
     }
 }
-
-exports.join = join;
-exports.leave = leave;
-exports.addToQueue = addToQueue;
-exports.addPlaylistToQueue = addPlaylistToQueue;
-exports.removeFromQueue = removeFromQueue;
-exports.clearQueue = clearQueue;
-exports.showList = showList;
-exports.pause = pause;
-exports.next = next;
-exports.prev = prev;
