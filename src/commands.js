@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { discord_key, client_id } from './config';
+import { discord_key, client_id } from './config.js';
 
 const commands = [
 	new SlashCommandBuilder()
