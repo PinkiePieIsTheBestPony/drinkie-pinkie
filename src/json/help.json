@@ -26,9 +26,8 @@
         "color": "0x00AE86",
         "description": "This bot allows you to insert your own custom prompts which can be guessed by others, and unique depending on who is saying the prompt!",
         "fields": {
-            "Commands": "`(!dpi |/)msg` - This command will have me send you a message for you to privately send your new prompt to me. Not sure how to do that? I'll show an example and explain that!",
-            "Example": "Here is an example prompt (which doesn't work lol): `p:[all] \"EXAMPLE time!\"; r|\"everyone\": \"heck yeah!!! I GIVE THE BEST EXAMPLES\",, r|\"user\": \"examples with you!\",, r|\"bot\": \"examples for you tulpies!\",, r|\"113460834692268032\": \"specific example with creator\"`",
-            "Example Explained": "`1st value (p:[all/this/<server_id>] \"...\";)` - Defines the prompt and where it can be prompted. Accepted characters (lowercase/uppercase/numbers/.,?!#$%). \n`2nd value (r|\"<entity>\":)` - Defines which statement to give depending on which group is defined. Users are: everyone:all members, user:non-bot, bot:bot members (tulpas), specific user/bot (id for user, name for bot) \n`3rd value (\"...\",,)` - Defines the response of the group specified, accepted characters are same as first value. Note: only use ,, if defining multiple different groups with values."
+            "Commands": "`/talk` - This command will have me send you a message for you to privately send your new prompt to me. Not sure how to do that? I'll show an example and explain that!",
+            "Example": "`scope [all/this/<server_id(s)>]` -> which servers this prompt can be prompted from \n`prompt` -> defines actual prompt that needs to be typed \n`who(1-5) [everyone, user (not bot users), bot (tulpas), <user_id(s)>]` -> who will response of prompt be targetted to \n`response(1-5)` -> actual response text"
         }
     },
     "audio": {
@@ -37,7 +36,8 @@
         "color": "0x00AE86",
         "description": "This bot allows for playing audio directly from YouTube.",
         "fields": {
-            "Commands": "`(!dpi |/)sounds queue join` - Have Drinkie join the VC, which will be determined based on which person triggered it, and which VC they were in. \n`(!dpi |/)sounds queue leave` - Have Drinkie leave the VC. \n`(!dpi |/)sounds queue add <url>` - Adds a YouTube video to the queue. \n`(!dpi |/)sounds queue remove <index>` - Removes video from queue based on index in queue. \n`(!dpi |/)sounds queue clear` - Clears all videos from the queue. \n`(!dpi |/)sounds queue list` - Lists all videos in queue. \n`(!dpi |/)sounds queue pause` - Pauses the current audio. \n`(!dpi |/)sounds queue next` - Plays next track in the queue. \n`(!dpi |/)sounds queue prev` - Plays previous track in the queue."
+            "Commands": "`(!dpi |/)sounds queue join` - Have Drinkie join the VC, which will be determined based on which person triggered it, and which VC they were in. \n`(!dpi |/)sounds queue leave` - Have Drinkie leave the VC. \n`(!dpi |/)sounds queue add <url>` - Adds a YouTube video to the queue. \n`(!dpi |/)sounds queue remove <index>` - Removes video from queue based on index in queue. \n`(!dpi |/)sounds queue clear` - Clears all videos from the queue. \n`(!dpi |/)sounds queue list` - Lists all videos in queue. \n`(!dpi |/)sounds queue pause` - Pauses the current audio. \n`(!dpi |/)sounds queue next` - Plays next track in the queue. \n`(!dpi |/)sounds queue prev` - Plays previous track in the queue. \n`(!dpi |/)sounds addplaylist <playlistid>` - Adds all videos in a playlist (currently only adds 1st 100 videos).",
+            "Optional Arguments": "Currently, the available extra arguments are `--notif=(yes/no)`, which will either not respond to normal commands, or send a private message if done through a slash command."
         }
     },
     "general": {
