@@ -53,18 +53,17 @@ export const createEmbeddedHelp = (msg) => {
         let promptData = parsedData["help"]["prompts"];
         return new MessageEmbed()
         .setTitle(promptData["title"])
-        .setAuthor(promptData["author"])
+        .setAuthor({name: promptData["author"]})
         .setColor(promptData["color"])
         .setDescription(promptData["description"])
         .addField("Commands", promptData["fields"]["Commands"])
         .addField("Example", promptData["fields"]["Example"])
-        .addField("Example Explained", promptData["fields"]["Example Explained"])
     } 
     else if (msg.includes('audio')) {
         let audioData = parsedData["help"]["audio"];
         return new MessageEmbed()
         .setTitle(audioData["title"])
-        .setAuthor(audioData["author"])
+        .setAuthor({name: audioData["author"]})
         .setColor(audioData["color"])
         .setDescription(audioData["description"])
         .addField("Commands", audioData["fields"]["Commands"]);

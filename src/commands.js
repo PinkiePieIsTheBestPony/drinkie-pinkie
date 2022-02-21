@@ -264,7 +264,58 @@ const commands = [
                 .addStringOption(option => 
                     option.setName('args')
                     .setDescription("Additional args")
-                    .setRequired(false))))
+                    .setRequired(false)))),
+        new SlashCommandBuilder()
+        .setName('talk')
+        .setDescription('Create custom bot interaction, will respond with a private message to you... (V2)')
+        .addStringOption(option =>
+		    option.setName('scope')
+                .setDescription('Determine where this phrase can be triggered.')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('prompt')
+                .setDescription("Define the actual prompt which will lead to a response.")
+                .setRequired(true))
+        .addStringOption(option => 
+            option.setName('who1')
+                .setDescription('Check who is typing the prompt.')
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('response1')
+                .setDescription('Response to that specific person to check for.')
+                .setRequired(true))
+        .addStringOption(option => 
+            option.setName('who2')
+                .setDescription('Check who is typing the prompt.')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('response2')
+                .setDescription('Response to that specific person to check for.')
+                .setRequired(false))
+        .addStringOption(option => 
+            option.setName('who3')
+                .setDescription('Check who is typing the prompt.')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('response3')
+                .setDescription('Response to that specific person to check for.')
+                .setRequired(false))
+        .addStringOption(option => 
+            option.setName('who4')
+                .setDescription('Check who is typing the prompt.')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('response4')
+                .setDescription('Response to that specific person to check for.')
+                .setRequired(false))
+        .addStringOption(option => 
+            option.setName('who5')
+                .setDescription('Check who is typing the prompt.')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('response5')
+                .setDescription('Response to that specific person to check for.')
+                .setRequired(false))
 ]
 	.map(command => command.toJSON());
 

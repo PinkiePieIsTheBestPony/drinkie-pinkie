@@ -2,11 +2,12 @@ import {createEmbeddedHelp} from './external-libs/discord.js';
 import {getDerpibooruImage} from './external-libs/derpi.js';
 import {send} from './post.js';
 import {botGames} from './games.js';
-import {jsonConvertor, randomNumber, decision, getPrompts} from './talk.js';
+import {randomNumber, decision, getPrompts} from './talk.js';
 import {botPonkSearch} from './dailyponk.js';
 import {join, leave, addToQueue, addPlaylistToQueue, removeFromQueue, clearQueue, showList, pause, next, prev} from './sound.js';
 import {randomEdit, rotationEdit, rotationList, queryNew, queryList, queryRemove, queryEdit, channelEdit, channelDefaultEdit, filterEdit} from './rotationQuery.js';
 import { prefix } from './config.js';
+import {selectAllStatementDB, insertStatementDB} from './db/dbQuery.js';
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -15,36 +16,69 @@ import { prefix } from './config.js';
  * @param {object} client [Discord.js] Client object, this represents Drinkie on the server where the message was sent
  */
 function botMessage(msg, client) {
-    msg.author.send("Hi! Drinkie here, please enter your prompt...I'll be waiting :)").then(privateMsg => {
-        let filter = m => (m.author.id != client.user.id);
-        let collector = privateMsg.channel.createMessageCollector(filter, { time: 120000 } );
-        let validResponse = false;
+    msg.type.reply("Depreciated command! Try using the function through `/talk`. Thanks!")
+}
 
-        collector.on('collect', m => {
-            let response = jsonConvertor(m.content, msg);
-            if (response) {
-                validResponse = true;
-                collector.stop();
-            }
-            else {
-                m.channel.send("Invalid prompt! Try again?")
-            }
-        });
-
-        collector.on('end', collected => {
-            if (collected.size == 0) {
-                msg.author.send("Timeout. Retrigger me to try again.");
-            }
-            else {
-                if (validResponse) {
-                    msg.author.send("Your prompt has been submitted!")
-                }
-                else {
-                    msg.author.send("Unfortunately your inputs were invalid. Please retrigger me again.")
+function botNewTalk(msg, client) {
+    let msgScope = msg.content[0];
+    let msgPrompt = msg.content[1];
+    let IdRegx = /[0-9]{17,}/
+    if (msgScope !== "all" && msgScope !== "this") {
+        if (msgScope.includes(",")) {
+            let serverIDArr = msgScope.split(",");
+            for (let j = 0; j < serverIDArr.length; j++) {
+                if (serverIDArr[j].match(IdRegx) == null) {
+                    msg.type.reply({ephemeral: true, content: "Invalid message scope - valid scopes are `all`, `this` or server IDs."});
+                    return;
                 }
             }
-        });
-    });
+        } else {
+            msg.type.reply({ephemeral: true, content: "Invalid message scope - valid scopes are `all`, `this` or server IDs."});
+            return;
+        }
+    }
+    let jsonDBPrompts = selectAllStatementDB("query_id, json_prompt", "p_prompts", null, null, null);
+    let allCurrentPrompts = jsonDBPrompts.split(",")[1].split('\n');
+    for (let x = 0; x < allCurrentPrompts.length; x++) {
+        if (allCurrentPrompts[x].toLowerCase().includes(msgPrompt.toLowerCase())) {
+            msg.type.reply({ephemeral: true, content: "Exact prompt already exists!"});
+            return;
+        }
+    }
+    let valueMax = selectAllStatementDB("MAX(QUERY_ID)", "p_prompts", null, null, null);
+    
+    valueMax++;
+    let jsonPrompt = '"' + valueMax + '":"' + msgPrompt + '"';
+    let jsonResponse = '"' + valueMax + '":{';
+    let i = 2;
+    while (i < msg.content.length) {
+        if (msg.content[i] !== null && msg.content[i+1] !== null) {
+            if (msg.content[i] !== "everyone" && msg.content[i] != "user" && msg.content[i] !== "bot") {
+                if (msg.content[i].includes(",")) {
+                    let userIDArr = msg.content[i].split(",");
+                    for (let k = 0; k < userIDArr.length; k++) {
+                        if (msg.content[i].match(IdRegx) == null) {
+                            msg.type.reply({ephemeral: true, content: "Invalid trigger scope - valid scopes are `everyone`, `user`, `bot` or user IDs."});
+                            return;
+                        } 
+                    }
+                    jsonResponse += '"' + msg.content[i] + '":' + '"' + msg.content[i+1] + '",';
+                } else {
+                    msg.type.reply({ephemeral: true, content: "Invalid trigger scope - valid scopes are `everyone`, `user`, `bot` or user IDs."});
+                    return;
+                }
+            } else {
+                jsonResponse += '"' + msg.content[i] + '":' + '"' + msg.content[i+1] + '",';
+            }
+        }
+        i+=2;
+    }
+    if (msgScope === "this") {
+        msgScope = msg.guild.id;
+    }
+    jsonResponse += '"msgForServer":"' + msgScope + '"}';
+    insertStatementDB("p_prompts(query_id, json_prompt, json_response, submitted_by)", valueMax, jsonPrompt, jsonResponse, msg.author.id);
+    msg.type.reply({ephemeral: true, content: "Message submitted!"});
 }
 
 /**
@@ -355,7 +389,8 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["dailyponk", botPonkSearch],
         ["source", botSource],
         ["predict", botPredict],
-        ["sounds", botSounds]
+        ["sounds", botSounds],
+        ["talk", botNewTalk]
     ]);
 
     const optionNameKeyPair = new Map([
@@ -368,7 +403,8 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["dailyponk", "search"],
         ["source", null],
         ["predict", "predict"],
-        ["sounds", "sounds_choice"]
+        ["sounds", "sounds_choice"],
+        ["talk", "scope"]
     ]);
 
     const settings = new Map([
@@ -386,7 +422,8 @@ export const possibleResponsesSlash = (interaction, client) => {
 
     const certainChoices = new Map([
         ["game_choice", ['game_choice', 'mention']],
-        ["search", ['search', 'day']]
+        ["search", ['search', 'day']],
+        ["scope", ['scope', 'prompt', 'who1', 'response1', 'who2', 'response2', 'who3', 'response3', 'who4', 'response4', 'who5', 'response5']]
     ]);
     
     const sounds = new Map([
@@ -438,15 +475,14 @@ export const possibleResponsesSlash = (interaction, client) => {
             }
         }
         values = values.join(' ');
-    } else if (name == 'game_choice' || name == 'search') {
+    } else if (name == 'game_choice' || name == 'search' || name == 'scope') {
         values = [];
         let choicesDict = certainChoices.get(name);
         for (let i = 0; i < choicesDict.length; i++) {
             values.push(interaction.options.getString(choicesDict[i]));
         }
-        values = values.join(' ');
-    }
-    else if (name !== null) {
+        if (name != 'scope') {values = values.join(' ');}
+    } else if (name !== null) {
         values = interaction.options.getString(name);
     } 
     

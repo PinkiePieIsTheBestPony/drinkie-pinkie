@@ -23,7 +23,7 @@ import {selectAllStatementDB, updateStatementDB, insertStatementDB} from './db/d
 function botResponse(msg, client, receivedMsg, counter, clientPos) {
     let user = 'user';
     let responser = "<@!" + msg.author.id + ">";
-    let identifier = msg.author.id
+    let allUsers = Object.keys(receivedMsg[counter+1])[0];
     if (receivedMsg[counter+1]["msgForServer"] == "all" || receivedMsg[counter+1]["msgForServer"].includes(msg.guild.id)) {
         if (msg.author.bot) {
             user = 'bot';
@@ -37,11 +37,11 @@ function botResponse(msg, client, receivedMsg, counter, clientPos) {
             } else {
                 msg.channel.send(receivedMsg[counter+1]["random"] + ": " + responser);
             }
-        } else if (receivedMsg[counter+1][identifier]) {
+        } else if (receivedMsg[counter+1][allUsers]) {
             if (clientPos == "start") {
-                msg.channel.send(responser + " " + receivedMsg[counter+1][identifier]);
+                msg.channel.send(responser + " " + receivedMsg[counter+1][allUsers]);
             } else {
-                msg.channel.send(receivedMsg[counter+1][identifier] + " " + responser);
+                msg.channel.send(receivedMsg[counter+1][allUsers] + " " + responser);
             }
         }
         else {
@@ -143,56 +143,6 @@ export const decision = (userNum, botNum, msg) => {
 }
 
 /**
- * Checks to determine if the message that was sent to Drinkie matches the valid syntax, and converts it into a JSON format to be inserted into the DB.
- * @private
- * @param {string} message Content of the message that had been sent
- * @param {object} messObj [Discord.js] Message object, generated based on message by user
- */
-export const jsonConvertor = (message, messObj) => {
-    let regx = /p:\[all\] [? "[a-zA-Z0-9.,?!#$%\\/' ]+";( r\|"[a-zA-Z0-9 ]+": "[a-zA-Z0-9.,?!#$%\\/' ]+"(,,){0,}){1,}|p:\[this\] [? "[a-zA-Z0-9.,?!#$%\\/' ]+";( r\|"[a-zA-Z0-9 ]+": "[a-zA-Z0-9.,?!#$%\\/' ]+"(,,){0,}){1,}|\[(\d{16,},{0,}){1,}\] [? "[a-zA-Z0-9.,?!#$%\\/' ]+";( r\|"[a-zA-Z0-9 ]+": "[a-zA-Z0-9.,?!#$%\\/' ]+"(,,){0,}){1,}/;
-    if (regx.test(message)) {
-        //check if message is directed to all
-        let promptStatus = '';
-        if (message.includes("p:[this]")) {
-            promptStatus = messObj.guild.id;
-        } else {
-            promptStatus = message.substring(3, message.indexOf("]"));
-        }
-
-        //get prompt
-        let promptMes = message.split(';')[0];
-        let valueMax = selectAllStatementDB("MAX(QUERY_ID)", "p_prompts", null, null, null);
-        valueMax++;
-        let prompt = '';
-        if (message.includes("p:[")) {
-            prompt = promptMes.substring(promptMes.indexOf("]") + 1).toLowerCase();
-        }
-        else {
-            prompt = promptMes.substring(3).toLowerCase();
-        }
-
-        //get responses
-        let responseMes = message.split(';')[1];
-        let responses = responseMes.split(",,");
-        let totalResponse = '';
-        for (let i = 0; i < responses.length; i++) {
-            user = responses[i].split(": ")[0].substring(3);
-            message = responses[i].split(": ")[1]
-            totalResponse += user + ":" + message + ",";
-        }
-        totalResponse += '"msgForServer": "' + promptStatus + '"';
-        indexVal = "\"" + valueMax + "\":";
-        // { "response": { "msgLookFor": { "1": "test" }, "msgRespondTo": { "1": "test", "2": test2 } } }
-        let jsonPrompt = indexVal + prompt 
-        let jsonResponse = indexVal + "{" + totalResponse + "}"
-        insertStatementDB("p_prompts(query_id, json_prompt, json_response, submitted_by)", valueMax, jsonPrompt, jsonResponse, messObj.author.id);
-        return true;
-    } else {
-        return false;
-    }
-}
-
-/**
  * This loads all the prompts and will ensure that a user has entered a valid prompt in which Drinkie has a relevant response
  * @private
  * @param {object} msg [Discord.js] Message object, generated based on message by user
@@ -223,9 +173,9 @@ export const getPrompts = (msg, client) => {
 
     if (regx.test(msg.content) || msg.content.startsWith('<@')) {
         for (let i = 0; i < numOfResp; i++) {
-            if (msg.content.toLowerCase().includes(sentMsg[i+1] + " <@!" + client.user.id + ">") || msg.content.toLowerCase().includes(sentMsg[i+1] + " <@" + client.user.id + ">")) {
+            if (msg.content.toLowerCase().includes(sentMsg[i+1].toLowerCase() + " <@!" + client.user.id + ">") || msg.content.toLowerCase().includes(sentMsg[i+1].toLowerCase() + " <@" + client.user.id + ">")) {
                 botResponse(msg, client, receivedMsg, i, "end");
-            } else if (msg.content.toLowerCase().includes("<@!" + client.user.id + "> " + sentMsg[i+1]) || msg.content.toLowerCase().includes("<@" + client.user.id + "> " + sentMsg[i+1])) {
+            } else if (msg.content.toLowerCase().includes("<@!" + client.user.id + "> " + sentMsg[i+1].toLowerCase()) || msg.content.toLowerCase().includes("<@" + client.user.id + "> " + sentMsg[i+1].toLowerCase())) {
                 botResponse(msg, client, receivedMsg, i, "start");
             }
         }
