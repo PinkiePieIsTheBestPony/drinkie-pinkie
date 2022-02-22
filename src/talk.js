@@ -23,7 +23,13 @@ import {selectAllStatementDB, updateStatementDB, insertStatementDB} from './db/d
 function botResponse(msg, client, receivedMsg, counter, clientPos) {
     let user = 'user';
     let responser = "<@!" + msg.author.id + ">";
-    let allUsers = Object.keys(receivedMsg[counter+1])[0];
+    let allUsersArr = Object.keys(receivedMsg[counter+1]);
+    let allUsers = '';
+    for (let z = 0; z < allUsersArr.length; z++) {
+        if (allUsersArr[z] == msg.author.id || allUsersArr[z].includes(msg.author.id)) {
+            allUsers = allUsersArr[z];
+        }
+    }
     if (receivedMsg[counter+1]["msgForServer"] == "all" || receivedMsg[counter+1]["msgForServer"].includes(msg.guild.id)) {
         if (msg.author.bot) {
             user = 'bot';
@@ -37,7 +43,8 @@ function botResponse(msg, client, receivedMsg, counter, clientPos) {
             } else {
                 msg.channel.send(receivedMsg[counter+1]["random"] + ": " + responser);
             }
-        } else if (receivedMsg[counter+1][allUsers]) {
+        } 
+        else if (allUsers.includes(msg.author.id)) {
             if (clientPos == "start") {
                 msg.channel.send(responser + " " + receivedMsg[counter+1][allUsers]);
             } else {
@@ -52,10 +59,12 @@ function botResponse(msg, client, receivedMsg, counter, clientPos) {
                     msg.channel.send(receivedMsg[counter+1][user] + " " + responser);
                 }
             } else {
-                if (clientPos == "start") {
-                    msg.channel.send(responser + " " + receivedMsg[counter+1]["everyone"]);
-                } else {
-                    msg.channel.send(receivedMsg[counter+1]["everyone"] + " " + responser);
+                if (receivedMsg[counter+1]["everyone"]) {
+                    if (clientPos == "start") {
+                        msg.channel.send(responser + " " + receivedMsg[counter+1]["everyone"]);
+                    } else {
+                        msg.channel.send(receivedMsg[counter+1]["everyone"] + " " + responser);
+                    }
                 }
             }
         }

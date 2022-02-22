@@ -64,8 +64,12 @@ function botNewTalk(msg, client) {
                     }
                     jsonResponse += '"' + msg.content[i] + '":' + '"' + msg.content[i+1] + '",';
                 } else {
-                    msg.type.reply({ephemeral: true, content: "Invalid trigger scope - valid scopes are `everyone`, `user`, `bot` or user IDs."});
-                    return;
+                    if (msg.content[i].match(IdRegx) == null) {
+                        msg.type.reply({ephemeral: true, content: "Invalid trigger scope - valid scopes are `everyone`, `user`, `bot` or user IDs."});
+                        return;
+                    } else {
+                        jsonResponse += '"' + msg.content[i] + '":' + '"' + msg.content[i+1] + '",';
+                    }
                 }
             } else {
                 jsonResponse += '"' + msg.content[i] + '":' + '"' + msg.content[i+1] + '",';
