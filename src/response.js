@@ -7,7 +7,8 @@ import {botPonkSearch} from './dailyponk.js';
 import {join, leave, addToQueue, addPlaylistToQueue, removeFromQueue, clearQueue, showList, pause, next, prev} from './sound.js';
 import {randomEdit, rotationEdit, rotationList, queryNew, queryList, queryRemove, queryEdit, channelEdit, channelDefaultEdit, filterEdit} from './rotationQuery.js';
 import { prefix } from './config.js';
-import {selectAllStatementDB, insertStatementDB} from './db/dbQuery.js';
+import {selectAllStatementDB, insertStatementDB, updateStatementDB} from './db/dbQuery.js';
+import {Permissions} from 'discord.js'
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -165,6 +166,50 @@ function botSettingsEdit(msg) {
         ["filter edit", filterEdit]
     ]);
 
+    let permissionValue = selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "0"]);
+    let functionRole = selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "0"]);
+    let isOwner = msg.guild.ownerId === msg.author.id
+    let roleSet = (functionRole !== "")
+    let hasCustomRole = msg.member.roles.cache.some(role => role.name = functionRole);
+    let isAdmin = msg.member.permissions.has([Permissions.FLAGS.ADMINISTRATOR]);
+    let isMod = msg.member.permissions.has([Permissions.FLAGS.MANAGE_MESSAGES]);
+    
+    switch(permissionValue) {
+        case '0':
+            if (!isOwner) {
+                msg.type.reply("Only owners can edit these queries.");
+                return;
+            }
+            break;
+        case '1':
+            //code to check custom role
+            if ((!hasCustomRole && roleSet) || !isOwner) {
+                msg.type.reply("Only users with role:" + role + " or the owner can edit these queries.")
+                return;
+            }
+            break;
+        case '2':
+            if (!isAdmin) {
+                msg.type.reply("Only users with admin roles can edit these queries.")
+                return;
+            }
+            break;
+        case '3':
+            if (!isMod) {
+                msg.type.reply("Only users with the MANAGE_MESSAGE permission in a role can edit these queries.")
+                return;
+            }
+            break;
+        case '4':
+            if ((!hasCustomRole && roleSet) || !isMod) {
+                msg.type.reply("Only users with role:" + role + " or users with the MANAGE_MESSAGE permission can edit these queries.")
+                return;
+            }
+            break;
+        case '5':
+            break;
+    }
+
     let functionName = settingsKeyPair.get(msg.content.split(' ').slice(0, 2).join(' '));
     msg.content = msg.content.split(' ').slice(2).join(' ');
 
@@ -312,6 +357,50 @@ function botSounds(msg) {
         ["queue prev", prev],
     ]);
 
+    let permissionValue = selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "1"]);
+    let functionRole = selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "1"]);
+    let isOwner = msg.guild.ownerId === msg.author.id
+    let roleSet = (functionRole !== "")
+    let hasCustomRole = msg.member.roles.cache.some(role => role.name = functionRole);
+    let isAdmin = msg.member.permissions.has([Permissions.FLAGS.ADMINISTRATOR]);
+    let isMod = msg.member.permissions.has([Permissions.FLAGS.MANAGE_MESSAGES]);
+    
+    switch(permissionValue) {
+        case '0':
+            if (!isOwner) {
+                msg.type.reply("Only owners can use these queue commands.");
+                return;
+            }
+            break;
+        case '1':
+            //code to check custom role
+            if ((!hasCustomRole && roleSet) || !isOwner) {
+                msg.type.reply("Only users with role:" + role + " or the owner can use these queue commands.")
+                return;
+            }
+            break;
+        case '2':
+            if (!isAdmin) {
+                msg.type.reply("Only users with admin roles can use these queue commands.")
+                return;
+            }
+            break;
+        case '3':
+            if (!isMod) {
+                msg.type.reply("Only users with the MANAGE_MESSAGE permission in a role can use these queue commands.")
+                return;
+            }
+            break;
+        case '4':
+            if ((!hasCustomRole && roleSet) || !isMod) {
+                msg.type.reply("Only users with role:" + role + " or users with the MANAGE_MESSAGE permission can use these queue commands.")
+                return;
+            }
+            break;
+        case '5':
+            break;
+    }
+
     const optArgsList = ['notif'];
     const optionalArgs = {'notif': true};
 
@@ -320,7 +409,7 @@ function botSounds(msg) {
             if (optArgsList[i]==$1 && ($2 === 'true' || $2 === 'false')) {
                 switch ($1) {
                     case "notif": {
-                        optionalArgs.notif = ($2 === 'true')
+                        optionalArgs.notif = ($2 === 'true') 
                         break;
                     }
                 }
@@ -335,6 +424,78 @@ function botSounds(msg) {
     if (functionName) {
         functionName(msg, optionalArgs);
     }
+}
+
+function botPermissions(msg) {
+    let permissionFor = msg.content.split(" ")[0];
+    let permissionTo = msg.content.split(" ")[1];
+    let customRole = msg.content.split(" ").slice(2);
+
+    let permissionValue = selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "2"]);
+    let functionRole = selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "2"]);
+    let isOwner = msg.guild.ownerId === msg.author.id
+    let roleSet = (functionRole !== "")
+    let hasCustomRole = msg.member.roles.cache.some(role => role.name = functionRole);
+    let isAdmin = msg.member.permissions.has([Permissions.FLAGS.ADMINISTRATOR]);
+    let isMod = msg.member.permissions.has([Permissions.FLAGS.MANAGE_MESSAGES]);
+    let dictModules = {0: "Query/Rotations", 1: "Sound Player", 2: "Permission Changing"}
+    let dictPermissions = {0: "Owner", 1: "Exclusive Role", 2: "Admin", 3: "Mod", 4: "Role + Mods", 5: "Everyone"}
+
+    switch(permissionValue) {
+        case '0':
+            if (!isOwner) {
+                msg.type.reply("Only owners can change these permissions.");
+                return;
+            }
+            break;
+        case '1':
+            //code to check custom role
+            if ((!hasCustomRole && roleSet) || !isOwner) {
+                msg.type.reply("Only users with role:" + functionRole + " or the owner can change these permissions.")
+                return;
+            }
+            break;
+        case '2':
+            if (!isAdmin) {
+                msg.type.reply("Only users with admin roles can change these permissions.")
+                return;
+            }
+            break;
+        case '3':
+            if (!isMod) {
+                msg.type.reply("Only users with the MANAGE_MESSAGE permission in a role can change these permissions.")
+                return;
+            }
+            break;
+        case '4':
+            if ((!hasCustomRole && roleSet) || !isMod) {
+                msg.type.reply("Only users with role:" + role + " or users with the MANAGE_MESSAGE permission can change these permissions.")
+                return;
+            }
+            break;
+        case '5':
+            break;
+    }
+
+    if (msg.guild.roles.cache.some(role => role.name == customRole) && customRole !== "") {
+        updateStatementDB('p_permissions', 'role_name', ["permission_functionality", "server_id"], [customRole, permissionFor, msg.guild.id]);
+        updateStatementDB('p_permissions', 'permission_value', ["permission_functionality", "server_id"], [permissionTo, permissionFor, msg.guild.id]);
+        msg.type.reply("The permission for " + dictModules[permissionFor] + " has been set to " + dictPermissions[permissionTo] + " with role " + customRole + ".");
+        return;
+    } else if (customRole !== "" && (permissionTo == 1 || permissionTo == 4)) {
+        msg.type.reply("Could not find the role.");
+        return;
+    }
+
+    updateStatementDB('p_permissions', 'permission_value', ["permission_functionality", "server_id"], [permissionTo, permissionFor, msg.guild.id]);
+    msg.type.reply("The permission for " + dictModules[permissionFor] + " has been set to " + dictPermissions[permissionTo] + ".")
+}
+
+function botBroadcastChange(msg) {
+    let broadcastStatus = msg.content.split(" ")[0];
+    updateStatementDB('p_broadcasts', 'broadcast_toggle', ['server_id'], [broadcastStatus, msg.guild.id]);
+    let wordedStatus = (broadcastStatus == "0") ? "off" : "on"
+    msg.type.reply("Change broadcasts have been turned " + wordedStatus + " for this server.")
 }
 
 /**
@@ -354,7 +515,7 @@ export const possibleResponses = (msg, client) => {
         [prefix + " source ", botSource],
         [prefix + " predict ", botPredict],
         [prefix + " broadcast ", botBroadcast],
-        [prefix + " sounds ", botSounds]
+        [prefix + " sounds ", botSounds],
     ]);
 
     if (msg.mentions.has(client.user)) {
@@ -394,7 +555,9 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["source", botSource],
         ["predict", botPredict],
         ["sounds", botSounds],
-        ["talk", botNewTalk]
+        ["talk", botNewTalk],
+        ["permission", botPermissions],
+        ["broadcast", botBroadcastChange]
     ]);
 
     const optionNameKeyPair = new Map([
@@ -408,7 +571,9 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["source", null],
         ["predict", "predict"],
         ["sounds", "sounds_choice"],
-        ["talk", "scope"]
+        ["talk", "scope"],
+        ["permission", "permission_functionality"],
+        ["broadcast", "toggle_broadcast"]
     ]);
 
     const settings = new Map([
@@ -427,7 +592,8 @@ export const possibleResponsesSlash = (interaction, client) => {
     const certainChoices = new Map([
         ["game_choice", ['game_choice', 'mention']],
         ["search", ['search', 'day']],
-        ["scope", ['scope', 'prompt', 'who1', 'response1', 'who2', 'response2', 'who3', 'response3', 'who4', 'response4', 'who5', 'response5']]
+        ["scope", ['scope', 'prompt', 'who1', 'response1', 'who2', 'response2', 'who3', 'response3', 'who4', 'response4', 'who5', 'response5']],
+        ["permission_functionality", ['permission_functionality', 'permission_number', 'role_name']]
     ]);
     
     const sounds = new Map([
@@ -479,7 +645,7 @@ export const possibleResponsesSlash = (interaction, client) => {
             }
         }
         values = values.join(' ');
-    } else if (name == 'game_choice' || name == 'search' || name == 'scope') {
+    } else if (name == 'game_choice' || name == 'search' || name == 'scope' || name == 'permission_functionality') {
         values = [];
         let choicesDict = certainChoices.get(name);
         for (let i = 0; i < choicesDict.length; i++) {
