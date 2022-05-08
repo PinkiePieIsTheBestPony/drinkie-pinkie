@@ -7,6 +7,9 @@ import {possibleResponses, possibleResponsesSlash} from './response.js';
 import nodeCron from 'cron';
 import {send} from './post.js';
 import { discord_key, prefix } from './config.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import fs from 'fs';
 
 /**
  * Initialises Drinkie client user, along with the DB and Twitter connectivity.
@@ -44,6 +47,14 @@ async function autoPostLoop(client) {
     }
 }
 
+function broadcastChange(guild, fileStream) {
+    let toggleSetting = selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
+    let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
+    if (toggleSetting == "1" && defaultChannel !== "noChannelFoundForDrinkie") {
+        guild.channels.cache.get(defaultChannel.replace('<#', '').replace('>', '')).send("Changelog: \n```" + fileStream.toString() + "```");
+    }
+}
+
 /**
  * When initialisation finishes - queries every server/guild Drinkie is in and ensures that there is a corresponding entry in DB. If not, will add that server/guild in.
  * Cron job will run every minute, running the following set of steps:
@@ -54,9 +65,14 @@ async function autoPostLoop(client) {
  */
 client.on('ready', () => {
     client.user.setActivity(prefix + ' help or /help');
+    let fileStream = fs.readFileSync(dirname(fileURLToPath(import.meta.url)) + '/../changes.txt');
     [...client.guilds.cache.values()].forEach(guild => {
         insertGuildDetails(guild);
+        if (fileStream.toString() !== "") {
+            broadcastChange(guild, fileStream);
+        }
     });
+    fs.writeFileSync(dirname(fileURLToPath(import.meta.url)) + '/../changes.txt', "");
     nodeCron.job(
         '0 * * * * *',
         function() {
