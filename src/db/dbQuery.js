@@ -123,4 +123,14 @@ export const insertGuildDetails = (guild) => {
     if (queueInfo !== guild.id) {
         insertStatementDB("p_queue(server_id, queue_data)", guild.id, 'noDataFoundInQueue');
     }
+    let permissionInfo = selectAllStatementDB("server_id", "p_permissions", ["server_id"], "=", [guild.id]);
+    if (permissionInfo !== guild.id) {
+        insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '0', '5');
+        insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '1', '5');
+        insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '2', '2');
+    }
+    let broadcastInfo = selectAllStatementDB("server_id", "p_broadcasts", ["server_id"], "=", [guild.id]);
+    if (broadcastInfo !== guild.id) {
+        insertStatementDB("p_broadcasts(server_id, broadcast_toggle)", guild.id, '0');
+    }
 }
