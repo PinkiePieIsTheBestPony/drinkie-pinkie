@@ -10,7 +10,7 @@
   "main": "post.js",
   "scripts": {
     "start": "node --experimental-specifier-resolution=node src/main.js",
-    "build": "node src/commands.js",
+    "build": "node src/commands.js && node src/update.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -29,6 +29,7 @@
     "ffmpeg-static": "^4.4.0",
     "fluent-ffmpeg": "^2.1.2",
     "pg-native": "^3.0.0",
+    "play-dl": "^1.9.4",
     "sodium": "^3.0.2",
     "ytdl-core": "^4.9.1",
     "ytpl": "^2.2.3"
