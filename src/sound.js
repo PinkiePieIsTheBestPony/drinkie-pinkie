@@ -1,6 +1,7 @@
 import {selectAllStatementDB, updateStatementDB} from './db/dbQuery.js';
 import { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, entersState, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType } from '@discordjs/voice';
-import ytdl from "ytdl-core";
+//import ytdl from "ytdl-core";
+import {stream, validate, video_basic_info} from "play-dl";
 import ytpl from 'ytpl';
 import {createQueueList} from './external-libs/discord.js';
 
@@ -59,9 +60,10 @@ async function playQueue(serverID, msg) {
         let audioPlayer = allAudioPlayers.get(serverID);
 
         connection.subscribe(audioPlayer);
-        const stream = ytdl(queue[0].url, {filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1<<25});
-        audioPlayer.play(createAudioResource(stream, {
-            inputType: StreamType.Arbitrary,
+        const audio = await stream(queue[0].url);
+        //const stream = ytdl(queue[0].url, {filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1<<25});
+        audioPlayer.play(createAudioResource(audio.stream, {
+            inputType: audio.type,
             inlineVolume: true
         }));
 
@@ -88,8 +90,12 @@ async function playQueue(serverID, msg) {
             console.error(`Error: ${error}.`);
             if (error.message === "Status code: 403") {
                 let queueNew = accessQueue(serverID);
-                queueNew = JSON.parse(queueNew);
-                nextSong(queueNew, serverID, msg);
+                if (queueNew === "noDataFoundInQueue") {
+                    safelyRemove(msg);
+                } else {
+                    queueNew = JSON.parse(queueNew);
+                    nextSong(queueNew, serverID, msg);
+                }
             } else {
                 (allOptsGbl.notif) ? msg.type.reply("Error encountered...going to disconnect and leave.") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "Error encountered...going to disconnect and leave."}) : "";
                 safelyRemove(msg);
@@ -186,10 +192,13 @@ export async function addToQueue(msg, optArgs) {
     } else {
         queue = JSON.parse(queue);
     }
-    let isValidVid = ytdl.validateURL(msg.content);
-    if (isValidVid) {
-        let soundDetails = await ytdl.getInfo(msg.content);
-        let sound = {title: soundDetails.videoDetails.title, url: soundDetails.videoDetails.video_url};
+    //let isValidVid = ytdl.validateURL(msg.content);
+    let isValidVid = await validate(msg.content);
+    if (isValidVid == "yt_video") {
+    //if (isValidVid) {
+        //let soundDetails = await ytdl.getInfo(msg.content);
+        let soundDetails = await video_basic_info(msg.content);
+        let sound = {title: soundDetails.video_details.title, url: soundDetails.video_details.url};
         queue.push(sound);
         updateQueue(msg.guild.id, JSON.stringify(queue));
         (allOptsGbl.notif) ? msg.type.reply(`Added to the queue!`) : (!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND") ? msg.type.reply({ephemeral: true, content: `Added to the queue!`}) : "";
