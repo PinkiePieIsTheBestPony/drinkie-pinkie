@@ -315,7 +315,40 @@ const commands = [
         .addStringOption(option =>
             option.setName('response5')
                 .setDescription('Response to that specific person to check for.')
-                .setRequired(false))
+                .setRequired(false)),
+        new SlashCommandBuilder()
+        .setName('permission')
+        .setDescription('Change permission settings for Drinkie')
+        .addStringOption(option =>
+            option.setName('permission_functionality')
+                .setDescription("Define which part of Drinkie to change permission settings of")
+                .setRequired(true)
+                .addChoice('Query/Rotations', '0')
+                .addChoice('Sound Player', '1')
+                .addChoice('Permission Changing (meta)', '2'))
+        .addStringOption(option =>
+            option.setName('permission_number')
+                .setDescription("Change who can set Drinkie's queries")
+                .setRequired(true)
+                .addChoice('Owner', '0')
+                .addChoice('Custom Role -> Exclusive', '1')
+                .addChoice('Administrator', '2')
+                .addChoice('Manage Messages [Mods]', '3')
+                .addChoice('Custom Role -> Mods+', '4')
+                .addChoice('Off', '5'))
+        .addStringOption(option => 
+            option.setName('role_name')
+                .setDescription('If selecting a custom role, enter the name of that role.')
+                .setRequired(false)),
+        new SlashCommandBuilder()
+        .setName('broadcast')
+        .setDescription('Broadcast settings, pretty bare tbh')
+        .addStringOption(option =>
+            option.setName('toggle_broadcast')
+                .setDescription("Determine if broadcasts are enabled for this server.")
+                .setRequired(true)
+                .addChoice('No', '0')
+                .addChoice('Yes', '1'))
 ]
 	.map(command => command.toJSON());
 
