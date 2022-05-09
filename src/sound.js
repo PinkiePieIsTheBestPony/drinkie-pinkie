@@ -64,7 +64,6 @@ async function playQueue(serverID, msg) {
         //const stream = ytdl(queue[0].url, {filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1<<25});
         audioPlayer.play(createAudioResource(audio.stream, {
             inputType: audio.type,
-            inlineVolume: true
         }));
 
         audioPlayer.on(AudioPlayerStatus.Playing, () => {

@@ -1,6 +1,1 @@
-- New permission role settings for the following Drinkie modules:
-   Image Querying
-   Sound Player
-- [EXPERIMENTAL] Change from using node-ytdl-core to play-dl
-- update.js runs to apply necessary changes at build time for already-registered servers
-- changes.txt broadcasts changes to servers which have setting enabled
+- improvement to audio performance through disabling inline volume parameter
