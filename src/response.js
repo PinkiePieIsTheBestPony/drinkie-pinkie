@@ -95,7 +95,7 @@ function botNewTalk(msg, client) {
 async function botGetImg(msg, client) {
     msg.channel.sendTyping();
     if (msg.content.includes("/") || msg.content.includes("\\") || msg.content.includes(";")) {
-        msg.reply("GO AWAY")
+        msg.type.reply("GO AWAY")
     }
     else {
         try {
@@ -104,13 +104,13 @@ async function botGetImg(msg, client) {
                 send(returnedImage, true, msg, client, '', null, null);
             }
             else {
-                msg.reply("Your query did not yield any results.");
+                msg.type.reply("Your query did not yield any results.");
             }
         } catch (response) {
             if (response == undefined) {
-                msg.reply("Unknown error...")
+                msg.type.reply("Unknown error...")
             } else {
-                msg.reply("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
+                msg.type.reply("Error! The network returned the following error code: " + response.status + " - " + response.statusText);
                 console.log(response);
             }
         }
