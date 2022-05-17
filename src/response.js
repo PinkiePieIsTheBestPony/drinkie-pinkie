@@ -7,8 +7,9 @@ import {botPonkSearch} from './dailyponk.js';
 import {join, leave, addToQueue, addPlaylistToQueue, removeFromQueue, clearQueue, showList, pause, next, prev} from './sound.js';
 import {randomEdit, rotationEdit, rotationList, queryNew, queryList, queryRemove, queryEdit, channelEdit, channelDefaultEdit, filterEdit} from './rotationQuery.js';
 import { prefix } from './config.js';
-import {selectAllStatementDB, insertStatementDB, updateStatementDB} from './db/dbQuery.js';
-import {Permissions} from 'discord.js'
+import { selectAllStatementDB, insertStatementDB, updateStatementDB } from './db/dbQuery.js';
+import { Permissions } from 'discord.js'
+import { getLink } from './external-libs/twitter.js';
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -498,6 +499,11 @@ function botBroadcastChange(msg) {
     msg.type.reply("Change broadcasts have been turned " + wordedStatus + " for this server.")
 }
 
+function botTwitEmbed(msg) {
+    let twitLink = msg.content.split(" ")[0];
+    getLink(msg, twitLink)
+}
+
 /**
  * Checks input from user regarding commands for Drinkie and will call relevant function
  * @public
@@ -557,7 +563,8 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["sounds", botSounds],
         ["talk", botNewTalk],
         ["permission", botPermissions],
-        ["broadcast", botBroadcastChange]
+        ["broadcast", botBroadcastChange],
+        ["twitembed", botTwitEmbed]
     ]);
 
     const optionNameKeyPair = new Map([
@@ -573,7 +580,8 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["sounds", "sounds_choice"],
         ["talk", "scope"],
         ["permission", "permission_functionality"],
-        ["broadcast", "toggle_broadcast"]
+        ["broadcast", "toggle_broadcast"],
+        ["twitembed", "link"]
     ]);
 
     const settings = new Map([

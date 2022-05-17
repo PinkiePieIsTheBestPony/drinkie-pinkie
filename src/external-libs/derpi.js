@@ -1,4 +1,3 @@
-//const { Search } = require('dinky.js');
 import {Search} from "dinky.js"
 import { derpi_key, prefix } from '../config.js';
 
