@@ -1,5 +1,6 @@
 import {getJSONFile} from './json/jsonReader.js';
 import {prefix} from './config.js';
+import { getLink } from './external-libs/twitter.js';
 
 /**
  * Reads JSON file which contains all the information regarding https://twitter.com/KurogeWaPony daily ponk image posting. Replies with the relevant image.
@@ -21,7 +22,7 @@ function ponkJSONLookup(searchType, searchValue, msg) {
         msg.type.reply("Invalid input found...")
     }
     let jsonResult = fileJSON["drinkiepic"][searchType][searchValue];
-    msg.type.reply(jsonResult["link"]);
+    getLink(msg, jsonResult["link"]);
 }
 
 /**
