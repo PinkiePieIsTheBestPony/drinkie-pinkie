@@ -131,6 +131,6 @@ export const insertGuildDetails = (guild) => {
     }
     let broadcastInfo = selectAllStatementDB("server_id", "p_broadcasts", ["server_id"], "=", [guild.id]);
     if (broadcastInfo !== guild.id) {
-        insertStatementDB("p_broadcasts(server_id, broadcast_toggle)", guild.id, '0');
+        insertStatementDB("p_broadcasts(server_id, broadcast_toggle, broadcast_valid)", guild.id, '0', '0');
     }
 }

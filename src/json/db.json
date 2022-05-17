@@ -8,7 +8,7 @@
             "5": "CREATE TABLE IF NOT EXISTS p_prompts (query_id SERIAL PRIMARY KEY, json_prompt TEXT, json_response TEXT, submitted_by TEXT);",
             "6": "CREATE TABLE IF NOT EXISTS p_queue (storage_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, queue_data TEXT, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
             "7": "CREATE TABLE IF NOT EXISTS p_permissions (permission_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, permission_functionality TEXT NOT NULL, permission_value TEXT NOT NULL, role_name TEXT, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
-            "8": "CREATE TABLE IF NOT EXISTS p_broadcasts (broadcast_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, broadcast_toggle TEXT NOT NULL, FOREIGN KEY(server_id) REFERENCES p_server(server_id));"
+            "8": "CREATE TABLE IF NOT EXISTS p_broadcasts (broadcast_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, broadcast_toggle TEXT NOT NULL, broadcast_valid TEXT NOT NULL, FOREIGN KEY(server_id) REFERENCES p_server(server_id));"
         }
     }
 }

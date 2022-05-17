@@ -1,7 +1,7 @@
 import {initialiseDiscordJS} from './external-libs/discord.js';
 import {getDerpibooruImage} from './external-libs/derpi.js';
 import {initialiseDB} from './db/initDB.js';
-import {selectAllStatementDB, insertGuildDetails, removeStatementDB} from './db/dbQuery.js';
+import {selectAllStatementDB, insertGuildDetails, removeStatementDB, updateStatementDB} from './db/dbQuery.js';
 import {cronChecker} from './cron.js';
 import {possibleResponses, possibleResponsesSlash} from './response.js';
 import nodeCron from 'cron';
@@ -49,8 +49,9 @@ async function autoPostLoop(client) {
 
 function broadcastChange(guild, fileStream) {
     let toggleSetting = selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
+    let validBroadcast = selectAllStatementDB("broadcast_valid", "p_broadcasts", ["server_id"], "=", [guild.id]);
     let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
-    if (toggleSetting == "1" && defaultChannel !== "noChannelFoundForDrinkie") {
+    if (toggleSetting == "1" && defaultChannel !== "noChannelFoundForDrinkie" && validBroadcast == "1") {
         guild.channels.cache.get(defaultChannel.replace('<#', '').replace('>', '')).send("Changelog: \n```" + fileStream.toString() + "```");
     }
 }
@@ -71,8 +72,8 @@ client.on('ready', () => {
         if (fileStream.toString() !== "") {
             broadcastChange(guild, fileStream);
         }
+        updateStatementDB("p_broadcasts", "broadcast_valid", ["server_id"], ["0", guild.id]);
     });
-    fs.writeFileSync(dirname(fileURLToPath(import.meta.url)) + '/../changes.txt', "");
     nodeCron.job(
         '0 * * * * *',
         function() {
