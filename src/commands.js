@@ -348,7 +348,14 @@ const commands = [
                 .setDescription("Determine if broadcasts are enabled for this server.")
                 .setRequired(true)
                 .addChoice('No', '0')
-                .addChoice('Yes', '1'))
+                .addChoice('Yes', '1')),
+        new SlashCommandBuilder()
+        .setName('twitembed')
+        .setDescription('Displays twitter links with images in a way which better shows the media')
+        .addStringOption(option => 
+            option.setName('link')
+                .setDescription('Link to embed images')
+                .setRequired(true))
 ]
 	.map(command => command.toJSON());
 
