@@ -7,6 +7,7 @@ export const db_url = process.env.DATABASE_URL;
 export const derpi_key = process.env.derpi_key;
 export const prefix = process.env.BOT_PREFIX;
 export const client_id = process.env.client_id;
+export const yt_api_key = process.env.yt_api_key;
 
 export const access_token = process.env.access_token;
 export const access_token_secret = process.env.access_token_secret;
