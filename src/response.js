@@ -532,8 +532,8 @@ async function botMediaFetch(msg) {
         case "new": {
             let serverQueryId = selectAllStatementDB("MAX(server_query_id)", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
             serverQueryId ? serverQueryId++ : serverQueryId=1
-            insertStatementDB("p_fetcher(server_id, content, channel_link, latest_video, latest_vtime, server_query_id)", msg.guild.id, splitArgs[1], splitArgs[2], latestVideos.items[0].snippet.resourceId.videoId, latestVideos.items[0].snippet.publishedAt, serverQueryId);
-            msg.type.reply("New fetcher query has been added! Their latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
+            insertStatementDB("p_fetcher(server_id, content, channel_link, latest_video, latest_vtime, server_query_id, channel_name)", msg.guild.id, splitArgs[1], splitArgs[2], latestVideos.items[0].snippet.resourceId.videoId, latestVideos.items[0].snippet.publishedAt, serverQueryId, latestVideos.items[0].snippet.channelTitle);
+            msg.type.reply("New fetcher query has been added! **" + latestVideos.items[0].snippet.channelTitle + "'s** latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
             break;
         }
         case "edit": {
@@ -542,7 +542,8 @@ async function botMediaFetch(msg) {
                 updateStatementDB("p_fetcher", "channel_link", ["fetcher_id", "server_id"], [splitArgs[2], splitArgs[1], msg.guild.id]);
                 updateStatementDB("p_fetcher", "latest_video", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.resourceId.videoId, splitArgs[1], msg.guild.id]);
                 updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.publishedAt, splitArgs[1], msg.guild.id]);
-                msg.type.reply("Fetcher query has been updated! The new channel's latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
+                updateStatementDB("p_fetcher", "channel_name", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.channelTitle, splitArgs[1], msg.guild.id])
+                msg.type.reply("Fetcher query has been updated! **" + latestVideos.items[0].snippet.channelTitle + "'s** latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
             }
             break;
         }
