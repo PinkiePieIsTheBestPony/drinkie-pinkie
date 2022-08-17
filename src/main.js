@@ -52,74 +52,77 @@ async function checkForLatest(client) {
     //get all db entries
     //id, server_id, content, channel, last video
     let fetcherIDsDBRes = selectAllStatementDB("fetcher_id, server_id", "p_fetcher", null, null, null);
-    let fetcherIDsArray = fetcherIDsDBRes.split('\n')
-    for (let i = 0; i < fetcherIDsArray.length; i++) {
-        let fetcherIDs = fetcherIDsArray[i].split(',');
-        let checkFrom = selectAllStatementDB("content", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-        let serverID = selectAllStatementDB("server_id", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-        let channelLink = selectAllStatementDB("channel_link", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-        let latestVideo = selectAllStatementDB("latest_video", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-        let latestVtime = selectAllStatementDB("latest_vtime", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-        let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [serverID]);
-        const link = "https://www.googleapis.com/youtube/v3/";
-        const ytRegex = /\"externalId\":\"(.*?)\"/;
-        if (defaultChannel !== "") {
-            switch(checkFrom) {
-                case 'youtube': {
-                    //get latest video link
-                    if (channelLink !== "") {
-                        let respYT = await fetch(channelLink).catch((error) => console.error(error));
-                        if (!respYT.ok) {continue}
-                        let pageHTML = await respYT.text();
-                        let youtubeChannId = ytRegex.exec(pageHTML);
-                        if (youtubeChannId !== null) {
-                            let apiResultResp = await fetch(link + "channels?part=contentDetails&id=" + youtubeChannId[1] + "&key=" + yt_api_key).catch((error) => console.error(error));
-                            if (!apiResultResp.ok) {continue}
-                            let apiResult = await apiResultResp.json();
-                            let userUploadsId = apiResult.items[0].contentDetails.relatedPlaylists.uploads;
-                            let latestVideosResp = await fetch(link + "playlistItems?part=snippet&playlistId=" + userUploadsId + "&maxResults=20&key=" + yt_api_key).catch((error) => console.error(error));
-                            if (!apiResultResp.ok) {continue}
-                            let latestVideos = await latestVideosResp.json();
-                            if (latestVideo === "" && latestVtime === "") {
-                                updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
-                                updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
-                            } else {
-                                let newToOldFound;
-                                if (latestVideo !== latestVideos.items[0].snippet.resourceId.videoId) {
-                                    let videosFound = [];
-                                    for (let j = 0; j < latestVideos.items.length; j++) {
-                                        //found last video
-                                        if (latestVideos.items[j].snippet.resourceId.videoId === latestVideo) {
-                                            let lengthOfMsg = "New video has been uploaded";
-                                            if (videosFound.length > 1) {
-                                                lengthOfMsg = videosFound.length + " new videos has been uploaded."
+    if (fetcherIDsDBRes !== "") {
+        let fetcherIDsArray = fetcherIDsDBRes.split('\n')
+        for (let i = 0; i < fetcherIDsArray.length; i++) {
+            let fetcherIDs = fetcherIDsArray[i].split(',');
+            let checkFrom = selectAllStatementDB("content", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
+            let serverID = selectAllStatementDB("server_id", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
+            let channelLink = selectAllStatementDB("channel_link", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
+            let latestVideo = selectAllStatementDB("latest_video", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
+            let latestVtime = selectAllStatementDB("latest_vtime", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
+            let channelName = selectAllStatementDB("channel_name", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
+            let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [serverID]);
+            const link = "https://www.googleapis.com/youtube/v3/";
+            const ytRegex = /\"externalId\":\"(.*?)\"/;
+            if (defaultChannel !== "") {
+                switch(checkFrom) {
+                    case 'youtube': {
+                        //get latest video link
+                        if (channelLink !== "") {
+                            let respYT = await fetch(channelLink).catch((error) => console.error(error));
+                            if (!respYT.ok) {continue}
+                            let pageHTML = await respYT.text();
+                            let youtubeChannId = ytRegex.exec(pageHTML);
+                            if (youtubeChannId !== null) {
+                                let apiResultResp = await fetch(link + "channels?part=contentDetails&id=" + youtubeChannId[1] + "&key=" + yt_api_key).catch((error) => console.error(error));
+                                if (!apiResultResp.ok) {continue}
+                                let apiResult = await apiResultResp.json();
+                                let userUploadsId = apiResult.items[0].contentDetails.relatedPlaylists.uploads;
+                                let latestVideosResp = await fetch(link + "playlistItems?part=snippet&playlistId=" + userUploadsId + "&maxResults=20&key=" + yt_api_key).catch((error) => console.error(error));
+                                if (!apiResultResp.ok) {continue}
+                                let latestVideos = await latestVideosResp.json();
+                                if (latestVideo === "" && latestVtime === "") {
+                                    updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
+                                    updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
+                                } else {
+                                    let newToOldFound;
+                                    if (latestVideo !== latestVideos.items[0].snippet.resourceId.videoId) {
+                                        let videosFound = [];
+                                        for (let j = 0; j < latestVideos.items.length; j++) {
+                                            //found last video
+                                            if (latestVideos.items[j].snippet.resourceId.videoId === latestVideo) {
+                                                let lengthOfMsg = "New video from " + channelName + " has been uploaded";
+                                                if (videosFound.length > 1) {
+                                                    lengthOfMsg = videosFound.length + " new videos from " + channelName + " has been uploaded."
+                                                }
+                                                updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
+                                                updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
+                                                //alert of upload(s)
+                                                client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(lengthOfMsg + "\n" + videosFound.map(e => "https://youtube.com/watch?v=" + e + "\n").toString().replaceAll(',', ''));
+                                                newToOldFound=true;
+                                                break;
+                                            //have not found it
+                                            } else {
+                                                videosFound.push(latestVideos.items[j].snippet.resourceId.videoId)
+                                                newToOldFound=false;
                                             }
+                                        }
+                                        if (newToOldFound == false) {
+                                            //alert of deleted old video
                                             updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
                                             updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
-                                            //alert of upload(s)
-                                            client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(lengthOfMsg + "\n" + videosFound.map(e => "https://youtube.com/watch?v=" + e + "\n").toString().replaceAll(',', ''));
-                                            newToOldFound=true;
-                                            break;
-                                        //have not found it
-                                        } else {
-                                            videosFound.push(latestVideos.items[j].snippet.resourceId.videoId)
-                                            newToOldFound=false;
+                                            client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("Unlisting/Privating/Removal of video from  " + channelName + ": https://youtube.com/watch?v=" + latestVideo);
                                         }
-                                    }
-                                    if (newToOldFound == false) {
-                                        //alert of deleted old video
-                                        updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
-                                        updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
-                                        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("Unlisting/Privating/Removal of video: https://youtube.com/watch?v=" + latestVideo);
-                                    }
-                                } 
-                            }
-                        } 
+                                    } 
+                                }
+                            } 
+                        }
+                        break;
                     }
-                    break;
-                }
-                default: {
-                    client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("We currently cannot check from this source...stay tuned though!");
+                    default: {
+                        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("We currently cannot check from this source...stay tuned though!");
+                    }
                 }
             }
         }
