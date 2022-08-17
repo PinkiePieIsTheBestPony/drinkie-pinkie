@@ -560,7 +560,7 @@ async function botMediaFetch(msg) {
             let arrayFetchers = allServerFetchers.split('\n');
             let messageResponse = '';
             if (allServerFetchers == '') {
-                messageResponse = 'There are currently no fetchers in this server.'
+                msg.type.reply({content: messageResponse = 'There are currently no fetchers in this server.'});
             } else {
                 msg.type.reply({content: arrayFetchers.map((f) => "FETCHER_ID: " + f.split(', ')[0] + ", FETCH_SOURCE: " + f.split(', ')[1] + ", CHANNEL: " + f.split(', ')[2] + ", LINK: https://youtube.com/watch?v=" + f.split(', ')[3] + "\n").toString().replaceAll(',', '')})
             }
