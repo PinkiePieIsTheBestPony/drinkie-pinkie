@@ -1,4 +1,1 @@
-- Add twitter embed command to see images in an embed (1, 2, 3 or 4 - gifs and videos will be displayed with just the content)
-- Add twitter embed to dailyponk module
-- Fix broadcast issue where it would repeatedly print changelog
-- Modify embed template and style
+- Add system that queries for new uploads on a youtube channel
