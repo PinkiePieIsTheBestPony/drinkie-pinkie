@@ -6,10 +6,11 @@ import {randomNumber, decision, getPrompts} from './talk.js';
 import {botPonkSearch} from './dailyponk.js';
 import {join, leave, addToQueue, addPlaylistToQueue, removeFromQueue, clearQueue, showList, pause, next, prev} from './sound.js';
 import {randomEdit, rotationEdit, rotationList, queryNew, queryList, queryRemove, queryEdit, channelEdit, channelDefaultEdit, filterEdit} from './rotationQuery.js';
-import { prefix } from './config.js';
-import { selectAllStatementDB, insertStatementDB, updateStatementDB } from './db/dbQuery.js';
+import { prefix, yt_api_key } from './config.js';
+import { selectAllStatementDB, insertStatementDB, updateStatementDB, removeStatementDB } from './db/dbQuery.js';
 import { Permissions } from 'discord.js'
 import { getLink } from './external-libs/twitter.js';
+import fetch from 'node-fetch';
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -504,6 +505,68 @@ function botTwitEmbed(msg) {
     getLink(msg, twitLink)
 }
 
+async function botMediaFetch(msg) {
+    let splitArgs = msg.content.trim().split(' ');
+    const link = "https://www.googleapis.com/youtube/v3/";
+    let latestVideos;
+    if (splitArgs[2] != null) {
+        const ytRegex = /\"externalId\":\"(.*?)\"/;
+        let respYT = await fetch(splitArgs[2]).catch((error) => console.error(error));
+        if (!respYT.ok) {return}
+        let pageHTML = await respYT.text();
+        let youtubeChannId = ytRegex.exec(pageHTML);
+        if (youtubeChannId === null) {
+            msg.type.reply("Youtube channel cannot be reached.");
+            return;
+        } else {
+            let apiResultResp = await fetch(link + "channels?part=contentDetails&id=" + youtubeChannId[1] + "&key=" + yt_api_key).catch((error) => console.error(error));
+            if (!apiResultResp.ok) {return}
+            let apiResult = await apiResultResp.json();
+            let userUploadsId = apiResult.items[0].contentDetails.relatedPlaylists.uploads;
+            let latestVideosResp = await fetch(link + "playlistItems?part=snippet&playlistId=" + userUploadsId + "&maxResults=1&key=" + yt_api_key).catch((error) => console.error(error));
+            if (!latestVideosResp.ok) {return}
+            latestVideos = await latestVideosResp.json();
+        }
+    }
+    switch (splitArgs[0]) {
+        case "new": {
+            let serverQueryId = selectAllStatementDB("MAX(server_query_id)", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
+            serverQueryId ? serverQueryId++ : serverQueryId=1
+            insertStatementDB("p_fetcher(server_id, content, channel_link, latest_video, latest_vtime, server_query_id)", msg.guild.id, splitArgs[1], splitArgs[2], latestVideos.items[0].snippet.resourceId.videoId, latestVideos.items[0].snippet.publishedAt, serverQueryId);
+            msg.type.reply("New fetcher query has been added! Their latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
+            break;
+        }
+        case "edit": {
+            let retrievedId = selectAllStatementDB("server_query_id", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
+            if (retrievedId == splitArgs[1]) {
+                updateStatementDB("p_fetcher", "channel_link", ["fetcher_id", "server_id"], [splitArgs[2], splitArgs[1], msg.guild.id]);
+                updateStatementDB("p_fetcher", "latest_video", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.resourceId.videoId, splitArgs[1], msg.guild.id]);
+                updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.publishedAt, splitArgs[1], msg.guild.id]);
+                msg.type.reply("Fetcher query has been updated! The new channel's latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
+            }
+            break;
+        }
+        case "remove": {
+            let retrievedId = selectAllStatementDB("server_query_id", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
+            if (retrievedId == splitArgs[1]) {
+                removeStatementDB("p_fetcher", ["server_id", "server_query_id"], [msg.guild.id, splitArgs[1]]);
+                msg.type.reply("Fetcher query has been removed!");
+            }
+            break;
+        }
+        case "list": {
+            let allServerFetchers = selectAllStatementDB("server_query_id, content, channel_link, latest_video", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
+            let arrayFetchers = allServerFetchers.split('\n');
+            let messageResponse = '';
+            if (allServerFetchers == '') {
+                messageResponse = 'There are currently no fetchers in this server.'
+            } else {
+                msg.type.reply({content: arrayFetchers.map((f) => "FETCHER_ID: " + f.split(', ')[0] + ", FETCH_SOURCE: " + f.split(', ')[1] + ", CHANNEL: " + f.split(', ')[2] + ", LINK: https://youtube.com/watch?v=" + f.split(', ')[3] + "\n").toString().replaceAll(',', '')})
+            }
+        }
+    }
+}
+
 /**
  * Checks input from user regarding commands for Drinkie and will call relevant function
  * @public
@@ -564,7 +627,8 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["talk", botNewTalk],
         ["permission", botPermissions],
         ["broadcast", botBroadcastChange],
-        ["twitembed", botTwitEmbed]
+        ["twitembed", botTwitEmbed],
+        ["mediafetch", botMediaFetch]
     ]);
 
     const optionNameKeyPair = new Map([
@@ -581,7 +645,8 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["talk", "scope"],
         ["permission", "permission_functionality"],
         ["broadcast", "toggle_broadcast"],
-        ["twitembed", "link"]
+        ["twitembed", "link"],
+        ["mediafetch", "content_type"]
     ]);
 
     const settings = new Map([
@@ -601,8 +666,15 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["game_choice", ['game_choice', 'mention']],
         ["search", ['search', 'day']],
         ["scope", ['scope', 'prompt', 'who1', 'response1', 'who2', 'response2', 'who3', 'response3', 'who4', 'response4', 'who5', 'response5']],
-        ["permission_functionality", ['permission_functionality', 'permission_number', 'role_name']]
+        ["permission_functionality", ['permission_functionality', 'permission_number', 'role_name']],
     ]);
+
+    const mediafetch = new Map([
+        ["new", ["content_type", "url"]],
+        ["edit", ["fetch_id", "url"]],
+        ["remove", ["fetch_id"]],
+        ["list", null]
+    ])
     
     const sounds = new Map([
         ["queue", {"join": "args", "leave": "args", "add": ["url", "args"], "addplaylist": ["playlistid", "args"], "remove": ["index", "args"], "clear": "args", "list": "args", "pause": "args", "next": "args", "prev": "args"}]
@@ -611,7 +683,17 @@ export const possibleResponsesSlash = (interaction, client) => {
     let functionName = responsesKeyPair.get(interaction.commandName);
     let name = optionNameKeyPair.get(interaction.commandName);
     let values = '';
-    if (name == 'sounds_choice') {
+    if (name == 'content_type') {
+        values = [];
+        let mediaDict = mediafetch.get(interaction.options.getSubcommand());
+        values.push(interaction.options.getSubcommand());
+        if (mediaDict !== null) {
+            for (let i = 0; i < mediaDict.length; i++) {
+                values.push(interaction.options.getString(mediaDict[i]));
+            }
+        }
+        values = values.join(' ');
+    } else if (name == 'sounds_choice') {
         values = [];
         let soundsDict = sounds.get(interaction.options.getSubcommandGroup());
         let specificArgs = soundsDict[interaction.options.getSubcommand()];
@@ -653,7 +735,7 @@ export const possibleResponsesSlash = (interaction, client) => {
             }
         }
         values = values.join(' ');
-    } else if (name == 'game_choice' || name == 'search' || name == 'scope' || name == 'permission_functionality') {
+    } else if (name == 'game_choice' || name == 'search' || name == 'scope' || name == 'permission_functionality' || name == 'content_type') {
         values = [];
         let choicesDict = certainChoices.get(name);
         for (let i = 0; i < choicesDict.length; i++) {

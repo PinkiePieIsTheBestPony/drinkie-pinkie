@@ -355,7 +355,43 @@ const commands = [
         .addStringOption(option => 
             option.setName('link')
                 .setDescription('Link to embed images')
-                .setRequired(true))
+                .setRequired(true)),
+        new SlashCommandBuilder()
+        .setName('mediafetch')
+        .setDescription('Set URL, and Drinkie will search URL every minute to find new content')
+        .addSubcommand(subcommand =>
+            subcommand.setName('new')
+            .setDescription("New fetcher for a piece of media")
+            .addStringOption(option =>
+                option.setName('content_type')
+                    .setDescription("Set which website to fetch content from")
+                    .setRequired(true)
+                    .addChoice('Youtube', 'youtube'))
+            .addStringOption(option =>
+                option.setName('url')
+                    .setDescription("URL to where you want to fetch the content from")
+                    .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand.setName('edit')
+            .setDescription("Edit a fetcher for a piece of media")
+            .addStringOption(option =>
+                option.setName('fetch_id')
+                    .setDescription("Type in the fetch query ID you want to change")
+                    .setRequired(true))
+            .addStringOption(option =>
+                option.setName("url")
+                    .setDescription("Enter the url you want it to fetch it from")
+                    .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand.setName('remove')
+            .setDescription("Remove fetcher for a piece of media")
+            .addStringOption(option =>
+                option.setName('fetch_id')
+                    .setDescription("Type in the fetch query ID you want to remove")
+                    .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand.setName('list')
+            .setDescription('List all fetchers for a server'))
 ]
 	.map(command => command.toJSON());
 
