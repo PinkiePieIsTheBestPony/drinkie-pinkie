@@ -9,7 +9,9 @@
             "6": "CREATE TABLE IF NOT EXISTS p_queue (storage_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, queue_data TEXT, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
             "7": "CREATE TABLE IF NOT EXISTS p_permissions (permission_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, permission_functionality TEXT NOT NULL, permission_value TEXT NOT NULL, role_name TEXT, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
             "8": "CREATE TABLE IF NOT EXISTS p_broadcasts (broadcast_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, broadcast_toggle TEXT NOT NULL, broadcast_valid TEXT NOT NULL, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
-            "9": "CREATE TABLE IF NOT EXISTS p_fetcher (fetcher_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, content TEXT NOT NULL, channel_link TEXT NOT NULL, latest_video TEXT NOT NULL, latest_vtime TEXT NOT NULL, server_query_id TEXT NOT NULL, channel_name TEXT NOT NULL, FOREIGN KEY(server_id) REFERENCES p_server(server_id));"
+            "9": "CREATE TABLE IF NOT EXISTS p_fetcher (fetcher_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, content TEXT NOT NULL, channel_link TEXT NOT NULL, latest_video TEXT NOT NULL, latest_vtime TEXT NOT NULL, server_query_id TEXT NOT NULL, channel_name TEXT NOT NULL, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
+            "10": "CREATE TABLE IF NOT EXISTS p_reminder (reminder_id SERIAL PRIMARY KEY, server_id TEXT NOT NULL, server_reminder BOOLEAN NOT NULL, reminder_text TEXT NOT NULL, schedule TEXT NOT NULL, reminder_from TEXT, reminder_to TEXT, FOREIGN KEY(server_id) REFERENCES p_server(server_id));",
+            "11": "CREATE TABLE IF NOT EXISTS p_journal (journal_id SERIAL PRIMARY KEY, user_id TEXT NOT NULL, journal_whole_name TEXT NOT NULL, journal_chapter TEXT, journal_page TEXT, journal_title TEXT, journal_entry TEXT NOT NULL, journal_part TEXT NOT NULL, time TEXT NOT NULL);"
         }
     }
 }
