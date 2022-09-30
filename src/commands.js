@@ -391,7 +391,61 @@ const commands = [
                     .setRequired(true)))
         .addSubcommand(subcommand =>
             subcommand.setName('list')
-            .setDescription('List all fetchers for a server'))
+            .setDescription('List all fetchers for a server')),
+        new SlashCommandBuilder()
+        .setName('reminder')
+        .setDescription("Set up a reminder, either once or recursively, and can be for someone")
+        .addStringOption(option =>
+            option.setName('server_specific')
+                .setDescription("Have this reminder be for this server specifically?")
+                .setRequired(true)
+                .addChoice('Yes', 'true')
+                .addChoice('No', 'false'))
+        .addStringOption(option =>
+            option.setName('reminder_text')
+                .setDescription("Add your flavour text!")
+                .setRequired(true))
+        .addStringOption(option => 
+            option.setName('schedule')
+                .setDescription("Set a specifc time, or recurring time (date or cron)")
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('reminder_to')
+                .setDescription("If valid, who is the reminder for?")
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('reminder_from')
+                .setDescription("Show who this is from?")
+                .setRequired(false)
+                .addChoice('Yes', 'true')
+                .addChoice('No', 'false')),
+        new SlashCommandBuilder()
+        .setName('journal')
+        .setDescription('Write to a journal with multiple options')
+        .addStringOption(option => 
+            option.setName('journal_name')
+                .setDescription("Name of the journal")
+                .setRequired(true))
+        .addStringOption(option => 
+            option.setName('entry')
+                .setDescription("Entry within the journal")
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName("part")
+                .setDescription("For longer entries that need to be split up, or fragmented.")
+                .setRequired(true))
+        .addStringOption(option => 
+            option.setName('chapter')
+                .setDescription("Chapter of the named journal")
+                .setRequired(false))
+        .addStringOption(option => 
+            option.setName('page')
+                .setDescription("Page of the anmed journal")
+                .setRequired(false))
+        .addStringOption(option => 
+            option.setName('journal_title')
+                .setDescription("The title for the entry")
+                .setRequired(false))
 ]
 	.map(command => command.toJSON());
 

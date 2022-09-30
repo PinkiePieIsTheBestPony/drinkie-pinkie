@@ -11,6 +11,7 @@ import { selectAllStatementDB, insertStatementDB, updateStatementDB, removeState
 import { Permissions } from 'discord.js'
 import { getLink } from './external-libs/twitter.js';
 import fetch from 'node-fetch';
+import { cronChecker } from './cron.js';
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -568,6 +569,73 @@ async function botMediaFetch(msg) {
     }
 }
 
+async function botReminder(msg) {
+    let serverSpecific = msg.content[0];
+    let reminderText = msg.content[1];
+    let schedule = msg.content[2];
+    let reminderTo = msg.content[3];
+    let reminderFrom = msg.content[4];
+
+    if (!cronChecker(schedule)) {
+        msg.type.reply({content: "Invalid cron query! Please try your command again with correct syntax.", ephemeral: true});
+        return;
+    }
+
+    if (reminderTo == undefined) {
+        reminderTo = null;
+    }
+
+    if (reminderFrom == undefined) {
+        reminderFrom = null;
+    } else {
+        if (reminderFrom == 'true') {
+            reminderFrom = "<@" + msg.author.id + ">";
+        } else {
+            reminderFrom = null;
+        }
+    }
+
+    insertStatementDB("p_reminder(server_id, server_reminder, reminder_text, schedule, reminder_from, reminder_to)", msg.guild.id, serverSpecific, reminderText, schedule, reminderFrom, reminderTo);
+
+    msg.type.reply({content: "New reminder has been added!", ephemeral: true})
+}
+
+async function botJournal(msg) {
+    let journalName = msg.content[0];
+    let entry = msg.content[1];
+    let part = msg.content[2];
+    let chapter = msg.content[3];
+    let page = msg.content[4];
+    let journalTitle = msg.content[5];
+
+    if (isNaN(part)) {
+        msg.type.reply({content: "Please enter an integer number, to describe if a journal has been split into parts.", ephemeral: true});
+        return;
+    }
+
+    if (chapter == undefined) {
+        chapter = null;
+    } else if (isNaN(chapter)) {
+        msg.type.reply({content: "Please enter an integer number as the chapter - in case there are layers to this.", ephemeral: true});
+        return;
+    }
+
+    if (page == undefined) {
+        page = null;
+    } else if (isNaN(page)) {
+        msg.type.reply({content: "Please enter an integer number for the page. Writing a book maybe?", ephemeral: true});
+        return;
+    }
+
+    if (journalTitle == undefined) {
+        journalTitle = null;
+    }
+    
+    insertStatementDB("p_journal(user_id, journal_whole_name, journal_chapter, journal_page, journal_title, journal_entry, journal_part, time)", msg.author.id, journalName, chapter, page, journalTitle, entry, part, Date.now())
+
+    msg.type.reply("New journal has been added!")
+}
+
 /**
  * Checks input from user regarding commands for Drinkie and will call relevant function
  * @public
@@ -629,7 +697,9 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["permission", botPermissions],
         ["broadcast", botBroadcastChange],
         ["twitembed", botTwitEmbed],
-        ["mediafetch", botMediaFetch]
+        ["mediafetch", botMediaFetch],
+        ["reminder", botReminder],
+        ["journal", botJournal]
     ]);
 
     const optionNameKeyPair = new Map([
@@ -647,7 +717,9 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["permission", "permission_functionality"],
         ["broadcast", "toggle_broadcast"],
         ["twitembed", "link"],
-        ["mediafetch", "content_type"]
+        ["mediafetch", "content_type"],
+        ["reminder", "server_specific"],
+        ["journal", "journal_name"]
     ]);
 
     const settings = new Map([
@@ -668,6 +740,8 @@ export const possibleResponsesSlash = (interaction, client) => {
         ["search", ['search', 'day']],
         ["scope", ['scope', 'prompt', 'who1', 'response1', 'who2', 'response2', 'who3', 'response3', 'who4', 'response4', 'who5', 'response5']],
         ["permission_functionality", ['permission_functionality', 'permission_number', 'role_name']],
+        ["server_specific", ["server_specific", "reminder_text", "schedule", "reminder_to", "reminder_from"]],
+        ["journal_name", ["journal_name", "entry", "part", "chapter", "page", "journal_title"]]
     ]);
 
     const mediafetch = new Map([
@@ -736,13 +810,13 @@ export const possibleResponsesSlash = (interaction, client) => {
             }
         }
         values = values.join(' ');
-    } else if (name == 'game_choice' || name == 'search' || name == 'scope' || name == 'permission_functionality' || name == 'content_type') {
+    } else if (name == 'game_choice' || name == 'search' || name == 'scope' || name == 'permission_functionality' || name == 'content_type' || name == 'server_specific' || name == 'journal_name') {
         values = [];
         let choicesDict = certainChoices.get(name);
         for (let i = 0; i < choicesDict.length; i++) {
             values.push(interaction.options.getString(choicesDict[i]));
         }
-        if (name != 'scope') {values = values.join(' ');}
+        if (name != 'scope' && name != 'journal_name' && name != 'server_specific') {values = values.join(' ');}
     } else if (name !== null) {
         values = interaction.options.getString(name);
     } 
