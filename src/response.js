@@ -11,7 +11,7 @@ import { selectAllStatementDB, insertStatementDB, updateStatementDB, removeState
 import { Permissions } from 'discord.js'
 import { getLink } from './external-libs/twitter.js';
 import fetch from 'node-fetch';
-import { cronChecker } from './cron.js';
+import { cronChecker, cronValidator } from './cron.js';
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -576,7 +576,7 @@ async function botReminder(msg) {
     let reminderTo = msg.content[3];
     let reminderFrom = msg.content[4];
 
-    if (!cronChecker(schedule)) {
+    if (!cronValidator(schedule)) {
         msg.type.reply({content: "Invalid cron query! Please try your command again with correct syntax.", ephemeral: true});
         return;
     }
