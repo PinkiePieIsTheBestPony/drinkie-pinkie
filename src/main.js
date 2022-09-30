@@ -48,6 +48,46 @@ async function autoPostLoop(client) {
     }
 }
 
+async function reminderChecker() {
+    let fetchReminders = selectAllStatementDB("reminder_id, server_id, server_reminder, schedule, reminder_from, reminder_to", "p_reminder", null, null, null);
+    if (fetchReminders !== "") {
+        let fetchRemindersArray = fetchReminders.split('\n');
+        for (let i = 0; i < fetchRemindersArray.length; i++) {
+            let reminderArray = fetchRemindersArray[i].split(', ');
+            let serverID = reminderArray[1];
+            let serverReminder = reminderArray[2];
+            let reminderText = selectAllStatementDB("reminder_text", "p_reminder", ["reminder_id"], "=", [reminderArray[0]])
+            let schedule = reminderArray[3];
+            let reminderFrom = reminderArray[4];
+            let reminderTo = reminderArray[5];
+
+            if (reminderArray[4] == "null") {
+                reminderFrom = null;
+            }
+
+            if (reminderArray[5] == "null") {
+                reminderTo = null;
+            }
+
+            let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [serverID]);
+            if (cronChecker(schedule)) {
+                let text = `${reminderTo ? "Hey " + reminderTo + ", " : ""}${reminderText}${reminderFrom ? ", from " + reminderFrom + "." : ""}`;
+                if (serverReminder == true) {
+                    client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(text);
+                } else {
+                    [...client.guilds.cache.values()].forEach(guild => {
+                        let toggleSetting = selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
+                        let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
+                        if (toggleSetting == 1) {
+                            guild.channels.cache.get(defaultChannel.replace('<#', '').replace('>', '')).send(text);
+                        }
+                    });
+                }
+            }
+        }
+    }
+}
+
 async function checkForLatest(client) {
     //get all db entries
     //id, server_id, content, channel, last video
@@ -163,6 +203,7 @@ client.on('ready', () => {
             let numberOfIterations = 0;
             if (numberOfIterations < 1) {
                 autoPostLoop(client);
+                reminderChecker();
                 numberOfIterations++;
             }
         },
