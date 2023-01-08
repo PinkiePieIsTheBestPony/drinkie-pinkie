@@ -1,4 +1,4 @@
-import {Search} from "dinky.js"
+import { SearchImages } from "dinky.js"
 import { derpi_key, prefix } from '../config.js';
 
 /**
@@ -102,9 +102,9 @@ export const getDerpibooruImage = async (message, filter, isNSFW) => {
         }
     }
     
-    const search = new Search({url: "https://derpibooru.org", linkOptions: {key: derpi_key}});
-    search.query(tagList).random().limit(1);
-    let resp = await search.exec({filter: filter})
+    const searchImg = new SearchImages({url: "https://derpibooru.org", linkOptions: {key: derpi_key}});
+    searchImg.query(tagList).random().limit(1);
+    let resp = await searchImg.exec({filter: filter})
     return resp.images[0];
 }
 

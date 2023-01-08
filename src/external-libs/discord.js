@@ -22,9 +22,9 @@ export const createEmbeddedHelp = (msg) => {
         .setTitle(generalData["title"])
         .setColor(generalData["color"])
         .setDescription(generalData["description"])
-        .addField("Commands", generalData["fields"]["Commands"])
-        .addField("Guides", generalData["fields"]["Guides"])
-        .addField("Functions", generalData["fields"]["Functions"])
+        .addFields({name: "Commands", value: generalData["fields"]["Commands"]})
+        .addFields({name: "Guides", value: generalData["fields"]["Guides"]})
+        .addFields({name: "Functions", value: generalData["fields"]["Functions"]})
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: generalData["footer"]});
     }
     else if (msg.includes('query')) {
@@ -33,7 +33,7 @@ export const createEmbeddedHelp = (msg) => {
         .setTitle(queryData["title"])
         .setColor(queryData["color"])
         .setDescription(queryData["description"])
-        .addField("Commands", queryData["fields"]["Commands"])
+        .addFields({name: "Commands", value: queryData["fields"]["Commands"]})
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: queryData["footer"]});
     }
     else if (msg.includes('rotation')) {
@@ -42,10 +42,10 @@ export const createEmbeddedHelp = (msg) => {
         .setTitle(rotationData["title"])
         .setColor(rotationData["color"])
         .setDescription(rotationData["description"])
-        .addField("Commands", rotationData["fields"]["Commands"])
-        .addField("Introduction", rotationData["fields"]["Introduction"])
-        .addField("Example Explained", rotationData["fields"]["Example Explained"])
-        .addField("External Help", rotationData["fields"]["External Help"])
+        .addFields({name: "Commands", value: rotationData["fields"]["Commands"]})
+        .addFields({name: "Introduction", value: rotationData["fields"]["Introduction"]})
+        .addFields({name: "Example Explained", value: rotationData["fields"]["Example Explained"]})
+        .addFields({name: "External Help", value: rotationData["fields"]["External Help"]})
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: rotationData["footer"]});
     }
     else if (msg.includes('prompts')) {
@@ -54,8 +54,8 @@ export const createEmbeddedHelp = (msg) => {
         .setTitle(promptData["title"])
         .setColor(promptData["color"])
         .setDescription(promptData["description"])
-        .addField("Commands", promptData["fields"]["Commands"])
-        .addField("Example", promptData["fields"]["Example"])
+        .addFields({name: "Commands", value: promptData["fields"]["Commands"]})
+        .addFields({name: "Example", value: promptData["fields"]["Example"]})
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: promptData["footer"]});
     } 
     else if (msg.includes('audio')) {
@@ -64,7 +64,7 @@ export const createEmbeddedHelp = (msg) => {
         .setTitle(audioData["title"])
         .setColor(audioData["color"])
         .setDescription(audioData["description"])
-        .addField("Commands", audioData["fields"]["Commands"])
+        .addFields({name: "Commands", value: audioData["fields"]["Commands"]})
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: audioData["footer"]});
     }
 }
@@ -74,7 +74,7 @@ export const createEmbeddedImg = (derpiObj, attachment) => {
     .setTitle("Derpibooru Image")
     .setURL("https://derpibooru.org/" + derpiObj["id"])
     .setColor('f5b7d0')
-    .addField("Tags", derpiObj["tags"].join(", ").substring(0, 1020).toString())
+    .addFields({name: "Tags", value: derpiObj["tags"].join(", ").substring(0, 1020).toString()})
     .addFields(
         { name: "Score", value: derpiObj["score"] + "(+" + derpiObj["upvotes"] + "/-" + derpiObj["downvotes"] + ")".toString(), inline: true },
         { name: '\u200B', value: '\u200B', inline: true },
@@ -95,8 +95,8 @@ export const createQueueList = (prevQueue, newQueue, prevInQueue, nextInQueue, c
         { name: "Queue Counter", value: (prevQueue.length+1) + "/" + (prevQueue.length + newQueue.length) },
         { name: "Current Song", value: currentlyPlaying}
     )
-    .addField("Prev Tracklist", prevInQueue)
-    .addField("Next Tracklist", nextInQueue)
+    .addFields({name: "Prev Tracklist", value: prevInQueue})
+    .addFields({name: "Next Tracklist", value: nextInQueue})
     .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: "Drinkie Pinkie - Made with 💜"})
 }
 
@@ -119,7 +119,7 @@ export const createEmbeddedTweet = (images, displayName, username, tweetText, fa
             .setURL(tweetLink)
             .setColor('f5b7d0')
             .setDescription(tweetText)
-            .addField("\u200B", "❤️  " + favCount + " 🔁  " + retweetCount.toString())
+            .addFields({name: "\u200B", value: "❤️  " + favCount + " 🔁  " + retweetCount.toString()})
             .setImage(images[0])
             .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: "Drinkie Pinkie - Made with 💜"})
         }

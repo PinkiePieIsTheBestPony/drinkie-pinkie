@@ -1,7 +1,7 @@
 import {selectAllStatementDB, updateStatementDB} from './db/dbQuery.js';
 import { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, entersState, createAudioPlayer, createAudioResource, AudioPlayerStatus, StreamType } from '@discordjs/voice';
-//import ytdl from "ytdl-core";
-import {stream, validate, video_basic_info} from "play-dl";
+import ytdl from "ytdl-core";
+//import {stream, validate, video_basic_info} from "play-dl";
 import ytpl from 'ytpl';
 import {createQueueList} from './external-libs/discord.js';
 
@@ -11,12 +11,12 @@ let allPrevSongs = '';
 let allStates = '';
 let allOptsGbl = '';
 
-function accessQueue(serverID) {
-    return selectAllStatementDB("queue_data", "p_queue", ["server_id"], "=", [serverID]);
+async function accessQueue(serverID) {
+    return await selectAllStatementDB("queue_data", "p_queue", ["server_id"], "=", [serverID]);
 }
 
-function updateQueue(serverID, queueData) {
-    updateStatementDB("p_queue", "queue_data", ["server_id"], [queueData, serverID]);
+async function updateQueue(serverID, queueData) {
+    await updateStatementDB("p_queue", "queue_data", ["server_id"], [queueData, serverID]);
 }
 
 function nextSong(queue, serverID, msg) {
@@ -48,7 +48,7 @@ function prevSong(queue, serverID, msg) {
 }
 
 async function playQueue(serverID, msg) {
-    let queue = accessQueue(serverID);
+    let queue = await accessQueue(serverID);
 
     if (queue === "noDataFoundInQueue") {
         safelyRemove(msg);
@@ -60,21 +60,27 @@ async function playQueue(serverID, msg) {
         let audioPlayer = allAudioPlayers.get(serverID);
 
         connection.subscribe(audioPlayer);
-        const audio = await stream(queue[0].url);
-        //const stream = ytdl(queue[0].url, {filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1<<25});
-        audioPlayer.play(createAudioResource(audio.stream, {
+        //const audio = await stream(queue[0].url);
+        const stream = ytdl(queue[0].url, {filter: "audioonly",
+        fmt: "mp3",
+        highWaterMark: 1<<25,
+        liveBuffer: 1<<25,
+        dlChunkSize: 0, //disabling chunking is recommended in discord bot
+        quality: "lowestaudio"});
+        /*audioPlayer.play(createAudioResource(audio.stream, {
             inputType: audio.type,
-        }));
+        }));*/
+        audioPlayer.play(createAudioResource(stream));
 
         audioPlayer.on(AudioPlayerStatus.Playing, () => {
             if (allOptsGbl.notif) msg.channel.send(`Now playing: ${queue[0].title}`)
         });
 
-        audioPlayer.on(AudioPlayerStatus.Idle, () => {
+        audioPlayer.on(AudioPlayerStatus.Idle, async () => {
             audioPlayer.stop();
             let playState = allStates.get(serverID);
             let pauseState = allPauseStates.get(serverID);
-            let queueNew = accessQueue(serverID);
+            let queueNew = await accessQueue(serverID);
             queueNew = JSON.parse(queueNew);
             if (pauseState == false) { 
                 if (playState == 'N') {
@@ -85,10 +91,10 @@ async function playQueue(serverID, msg) {
             }
         });
 
-        audioPlayer.on('error', error => {
+        audioPlayer.on('error', async error => {
             console.error(`Error: ${error}.`);
             if (error.message === "Status code: 403") {
-                let queueNew = accessQueue(serverID);
+                let queueNew = await accessQueue(serverID);
                 if (queueNew === "noDataFoundInQueue") {
                     safelyRemove(msg);
                 } else {
@@ -141,7 +147,7 @@ function voiceStatus(serverID, msg) {
     })
 }
 
-export const join = (msg, optArgs) => {
+export async function join(msg, optArgs) {
     allOptsGbl = optArgs;
     let connection = getVoiceConnection(msg.guild.id);
     if (typeof connection == 'undefined') {
@@ -149,7 +155,7 @@ export const join = (msg, optArgs) => {
             const permissions = msg.member.voice.channel.permissionsFor(msg.client.user);
             if (permissions.has("CONNECT") | permissions.has("SPEAK")) {
                 let serverID = msg.guild.id;
-                let data = accessQueue(serverID);
+                let data = await accessQueue(serverID);
                 if (data === "noDataFoundInQueue") {
                     (allOptsGbl.notif) ? msg.type.reply("You need to add a song into this queue...") : ((!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND")) ? msg.type.reply({ephemeral: true, content: "You need to add a song into this queue..."}) : "";
                 } else {
@@ -185,19 +191,20 @@ export const leave = (msg, optArgs) => {
 
 export async function addToQueue(msg, optArgs) {
     allOptsGbl = optArgs;
-    let queue = accessQueue(msg.guild.id);
+    let queue = await accessQueue(msg.guild.id);
     if (queue === "noDataFoundInQueue") {
         queue = [];
     } else {
         queue = JSON.parse(queue);
     }
-    //let isValidVid = ytdl.validateURL(msg.content);
-    let isValidVid = await validate(msg.content);
-    if (isValidVid == "yt_video") {
-    //if (isValidVid) {
-        //let soundDetails = await ytdl.getInfo(msg.content);
-        let soundDetails = await video_basic_info(msg.content);
-        let sound = {title: soundDetails.video_details.title, url: soundDetails.video_details.url};
+    let isValidVid = ytdl.validateURL(msg.content);
+    //let isValidVid = await validate(msg.content);
+    //if (isValidVid == "yt_video") {
+    if (isValidVid) {
+        let soundDetails = await ytdl.getInfo(msg.content);
+        //let soundDetails = await video_basic_info(msg.content);
+        //let sound = {title: soundDetails.video_details.title, url: soundDetails.video_details.url};
+        let sound = {title: soundDetails.videoDetails.title, url: soundDetails.videoDetails.video_url};
         queue.push(sound);
         updateQueue(msg.guild.id, JSON.stringify(queue));
         (allOptsGbl.notif) ? msg.type.reply(`Added to the queue!`) : (!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND") ? msg.type.reply({ephemeral: true, content: `Added to the queue!`}) : "";
@@ -208,7 +215,7 @@ export async function addToQueue(msg, optArgs) {
 
 export async function addPlaylistToQueue(msg, optArgs) {
     allOptsGbl = optArgs;
-    let queue = accessQueue(msg.guild.id);
+    let queue = await accessQueue(msg.guild.id);
     if (queue === "noDataFoundInQueue") {
         queue = [];
     } else {
@@ -228,9 +235,9 @@ export async function addPlaylistToQueue(msg, optArgs) {
     }
 }
 
-export const removeFromQueue = (msg, optArgs) => {
+export async function removeFromQueue(msg, optArgs) {
     allOptsGbl = optArgs;
-    let queue = accessQueue(msg.guild.id);
+    let queue = await accessQueue(msg.guild.id);
     if (queue !== "noDataFoundInQueue") {
         queue = JSON.parse(queue);
         if (msg.content > queue.length) {
@@ -249,9 +256,9 @@ export const removeFromQueue = (msg, optArgs) => {
     }
 }
 
-export const clearQueue = (msg, optArgs) => {
+export async function clearQueue(msg, optArgs) {
     allOptsGbl = optArgs;
-    let queue = accessQueue(msg.guild.id);
+    let queue = await accessQueue(msg.guild.id);
     if (queue !== "noDataFoundInQueue") {
         if (allPrevSongs !== '') {
             let nextMsgQueue = JSON.parse(queue);
@@ -271,10 +278,10 @@ export const clearQueue = (msg, optArgs) => {
     }
 }
 
-export const next = (msg, optArgs) => {
+export async function next(msg, optArgs) {
     allOptsGbl = optArgs;
     if (allAudioPlayers !== '') {
-        let queue = accessQueue(msg.guild.id);
+        let queue = await accessQueue(msg.guild.id);
         let audioPlayer = allAudioPlayers.get(msg.guild.id);
         if (typeof audioPlayer !== 'undefined') {
             allStates.set(msg.guild.id, 'N');           
@@ -290,10 +297,10 @@ export const next = (msg, optArgs) => {
     }
 }
 
-export const prev = (msg, optArgs) => {
+export async function prev(msg, optArgs) {
     allOptsGbl = optArgs;
     if (allAudioPlayers !== '') {
-        let queue = accessQueue(msg.guild.id);
+        let queue = await accessQueue(msg.guild.id);
         let audioPlayer = allAudioPlayers.get(msg.guild.id);
         if (typeof audioPlayer !== 'undefined') {
             allStates.set(msg.guild.id, 'P');
@@ -339,9 +346,9 @@ export const pause = (msg, optArgs) => {
     }
 }
 
-export const showList = (msg, optArgs) => {
+export async function showList(msg, optArgs) {
     allOptsGbl = optArgs;
-    let queue = accessQueue(msg.guild.id);
+    let queue = await accessQueue(msg.guild.id);
     if (queue === "noDataFoundInQueue") {
         (!allOptsGbl.notif && msg.type.type === "APPLICATION_COMMAND") ? msg.type.reply({ephemeral: true, content: "Nothing queued..."}) : msg.type.reply("Nothing queued...")
     } else {

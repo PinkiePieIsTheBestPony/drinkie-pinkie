@@ -11,7 +11,7 @@ import { selectAllStatementDB, insertStatementDB, updateStatementDB, removeState
 import { Permissions } from 'discord.js'
 import { getLink } from './external-libs/twitter.js';
 import fetch from 'node-fetch';
-import { cronChecker, cronValidator } from './cron.js';
+import { cronValidator } from './cron.js';
 
 /**
  * This will check every message that Drinkie is sent and will terminate once either a valid message has been sent or 2 minutes has passed.
@@ -23,7 +23,7 @@ function botMessage(msg, client) {
     msg.type.reply("Depreciated command! Try using the function through `/talk`. Thanks!")
 }
 
-function botNewTalk(msg, client) {
+async function botNewTalk(msg, client) {
     let msgScope = msg.content[0];
     let msgPrompt = msg.content[1];
     let IdRegx = /[0-9]{17,}/
@@ -41,7 +41,7 @@ function botNewTalk(msg, client) {
             return;
         }
     }
-    let jsonDBPrompts = selectAllStatementDB("query_id, json_prompt", "p_prompts", null, null, null);
+    let jsonDBPrompts = await selectAllStatementDB("query_id, json_prompt", "p_prompts", null, null, null);
     let allCurrentPrompts = jsonDBPrompts.split(",")[1].split('\n');
     for (let x = 0; x < allCurrentPrompts.length; x++) {
         if (allCurrentPrompts[x].toLowerCase().includes(msgPrompt.toLowerCase())) {
@@ -49,7 +49,7 @@ function botNewTalk(msg, client) {
             return;
         }
     }
-    let valueMax = selectAllStatementDB("MAX(QUERY_ID)", "p_prompts", null, null, null);
+    let valueMax = await selectAllStatementDB("MAX(QUERY_ID)", "p_prompts", null, null, null);
     
     valueMax++;
     let jsonPrompt = '"' + valueMax + '":"' + msgPrompt + '"';
@@ -85,7 +85,7 @@ function botNewTalk(msg, client) {
         msgScope = msg.guild.id;
     }
     jsonResponse += '"msgForServer":"' + msgScope + '"}';
-    insertStatementDB("p_prompts(query_id, json_prompt, json_response, submitted_by)", valueMax, jsonPrompt, jsonResponse, msg.author.id);
+    await insertStatementDB("p_prompts(query_id, json_prompt, json_response, submitted_by)", valueMax, jsonPrompt, jsonResponse, msg.author.id);
     msg.type.reply({ephemeral: true, content: "Message submitted!"});
 }
 
@@ -155,7 +155,7 @@ function botGetRndNum(msg) {
  * @private
  * @param {object} msg Message object, generated based on message by user
  */
-function botSettingsEdit(msg) {
+async function botSettingsEdit(msg) {
     const settingsKeyPair = new Map([
         ["random edit", randomEdit],
         ["rotation edit", rotationEdit],
@@ -169,8 +169,8 @@ function botSettingsEdit(msg) {
         ["filter edit", filterEdit]
     ]);
 
-    let permissionValue = selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "0"]);
-    let functionRole = selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "0"]);
+    let permissionValue = await selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "0"]);
+    let functionRole = await selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "0"]);
     let isOwner = msg.guild.ownerId === msg.author.id
     let roleSet = (functionRole !== "")
     let hasCustomRole = msg.member.roles.cache.some(role => role.name = functionRole);
@@ -346,7 +346,7 @@ function botBroadcast(msg, client) {
     }
 }
 
-function botSounds(msg) {
+async function botSounds(msg) {
     const optionKeyPair = new Map([
         ["queue join", join],
         ["queue leave", leave],
@@ -360,8 +360,8 @@ function botSounds(msg) {
         ["queue prev", prev],
     ]);
 
-    let permissionValue = selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "1"]);
-    let functionRole = selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "1"]);
+    let permissionValue = await selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "1"]);
+    let functionRole = await selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "1"]);
     let isOwner = msg.guild.ownerId === msg.author.id
     let roleSet = (functionRole !== "")
     let hasCustomRole = msg.member.roles.cache.some(role => role.name = functionRole);
@@ -429,13 +429,13 @@ function botSounds(msg) {
     }
 }
 
-function botPermissions(msg) {
+async function botPermissions(msg) {
     let permissionFor = msg.content.split(" ")[0];
     let permissionTo = msg.content.split(" ")[1];
     let customRole = msg.content.split(" ").slice(2);
 
-    let permissionValue = selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "2"]);
-    let functionRole = selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "2"]);
+    let permissionValue = await selectAllStatementDB("permission_value", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "2"]);
+    let functionRole = await selectAllStatementDB("role_name", "p_permissions", ["server_id", "permission_functionality"], "=", [msg.guild.id, "2"]);
     let isOwner = msg.guild.ownerId === msg.author.id
     let roleSet = (functionRole !== "")
     let hasCustomRole = msg.member.roles.cache.some(role => role.name = functionRole);
@@ -481,8 +481,8 @@ function botPermissions(msg) {
     }
 
     if (msg.guild.roles.cache.some(role => role.name == customRole) && customRole !== "") {
-        updateStatementDB('p_permissions', 'role_name', ["permission_functionality", "server_id"], [customRole, permissionFor, msg.guild.id]);
-        updateStatementDB('p_permissions', 'permission_value', ["permission_functionality", "server_id"], [permissionTo, permissionFor, msg.guild.id]);
+        await updateStatementDB('p_permissions', 'role_name', ["permission_functionality", "server_id"], [customRole, permissionFor, msg.guild.id]);
+        await updateStatementDB('p_permissions', 'permission_value', ["permission_functionality", "server_id"], [permissionTo, permissionFor, msg.guild.id]);
         msg.type.reply("The permission for " + dictModules[permissionFor] + " has been set to " + dictPermissions[permissionTo] + " with role " + customRole + ".");
         return;
     } else if (customRole !== "" && (permissionTo == 1 || permissionTo == 4)) {
@@ -490,13 +490,13 @@ function botPermissions(msg) {
         return;
     }
 
-    updateStatementDB('p_permissions', 'permission_value', ["permission_functionality", "server_id"], [permissionTo, permissionFor, msg.guild.id]);
+    await updateStatementDB('p_permissions', 'permission_value', ["permission_functionality", "server_id"], [permissionTo, permissionFor, msg.guild.id]);
     msg.type.reply("The permission for " + dictModules[permissionFor] + " has been set to " + dictPermissions[permissionTo] + ".")
 }
 
-function botBroadcastChange(msg) {
+async function botBroadcastChange(msg) {
     let broadcastStatus = msg.content.split(" ")[0];
-    updateStatementDB('p_broadcasts', 'broadcast_toggle', ['server_id'], [broadcastStatus, msg.guild.id]);
+    await updateStatementDB('p_broadcasts', 'broadcast_toggle', ['server_id'], [broadcastStatus, msg.guild.id]);
     let wordedStatus = (broadcastStatus == "0") ? "off" : "on"
     msg.type.reply("Change broadcasts have been turned " + wordedStatus + " for this server.")
 }
@@ -531,39 +531,37 @@ async function botMediaFetch(msg) {
     }
     switch (splitArgs[0]) {
         case "new": {
-            let serverQueryId = selectAllStatementDB("MAX(server_query_id)", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
+            let serverQueryId = await selectAllStatementDB("MAX(server_query_id)", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
             serverQueryId ? serverQueryId++ : serverQueryId=1
-            insertStatementDB("p_fetcher(server_id, content, channel_link, latest_video, latest_vtime, server_query_id, channel_name)", msg.guild.id, splitArgs[1], splitArgs[2], latestVideos.items[0].snippet.resourceId.videoId, latestVideos.items[0].snippet.publishedAt, serverQueryId, latestVideos.items[0].snippet.channelTitle);
+            await insertStatementDB("p_fetcher(server_id, content, channel_link, latest_video, latest_vtime, server_query_id, channel_name)", msg.guild.id, splitArgs[1], splitArgs[2], latestVideos.items[0].snippet.resourceId.videoId, latestVideos.items[0].snippet.publishedAt, serverQueryId, latestVideos.items[0].snippet.channelTitle);
             msg.type.reply("New fetcher query has been added! **" + latestVideos.items[0].snippet.channelTitle + "'s** latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
             break;
         }
         case "edit": {
-            let retrievedId = selectAllStatementDB("server_query_id", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
+            let retrievedId = await selectAllStatementDB("server_query_id", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
             if (retrievedId == splitArgs[1]) {
-                updateStatementDB("p_fetcher", "channel_link", ["fetcher_id", "server_id"], [splitArgs[2], splitArgs[1], msg.guild.id]);
-                updateStatementDB("p_fetcher", "latest_video", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.resourceId.videoId, splitArgs[1], msg.guild.id]);
-                updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.publishedAt, splitArgs[1], msg.guild.id]);
-                updateStatementDB("p_fetcher", "channel_name", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.channelTitle, splitArgs[1], msg.guild.id])
+                await updateStatementDB("p_fetcher", "channel_link", ["fetcher_id", "server_id"], [splitArgs[2], splitArgs[1], msg.guild.id]);
+                await updateStatementDB("p_fetcher", "latest_video", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.resourceId.videoId, splitArgs[1], msg.guild.id]);
+                await updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.publishedAt, splitArgs[1], msg.guild.id]);
+                await updateStatementDB("p_fetcher", "channel_name", ["fetcher_id", "server_id"], [latestVideos.items[0].snippet.channelTitle, splitArgs[1], msg.guild.id])
                 msg.type.reply("Fetcher query has been updated! **" + latestVideos.items[0].snippet.channelTitle + "'s** latest video is: https://youtube.com/watch?v=" + latestVideos.items[0].snippet.resourceId.videoId);
             }
             break;
         }
         case "remove": {
-            let retrievedId = selectAllStatementDB("server_query_id", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
+            let retrievedId = await selectAllStatementDB("server_query_id", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
             if (retrievedId == splitArgs[1]) {
-                removeStatementDB("p_fetcher", ["server_id", "server_query_id"], [msg.guild.id, splitArgs[1]]);
+                await removeStatementDB("p_fetcher", ["server_id", "server_query_id"], [msg.guild.id, splitArgs[1]]);
                 msg.type.reply("Fetcher query has been removed!");
             }
             break;
         }
         case "list": {
-            let allServerFetchers = selectAllStatementDB("server_query_id, content, channel_link, latest_video", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
-            let arrayFetchers = allServerFetchers.split('\n');
-            let messageResponse = '';
+            let allServerFetchers = await selectAllStatementDB("server_query_id, content, channel_link, latest_video", "p_fetcher", ["server_id"], "=", [msg.guild.id]);
             if (allServerFetchers == '') {
-                msg.type.reply({content: messageResponse = 'There are currently no fetchers in this server.'});
+                msg.type.reply({content: 'There are currently no fetchers in this server.'});
             } else {
-                msg.type.reply({content: arrayFetchers.map((f) => "FETCHER_ID: " + f.split(', ')[0] + ", FETCH_SOURCE: " + f.split(', ')[1] + ", CHANNEL: " + f.split(', ')[2] + ", LINK: https://youtube.com/watch?v=" + f.split(', ')[3] + "\n").toString().replaceAll(',', '')})
+                msg.type.reply({content: allServerFetchers.map((fetchData) => "FETCHER_ID: " + fetchData.server_query_id + ", FETCH_SOURCE: " + fetchData.content + ", CHANNEL: " + fetchData.channel_link + ", LINK: https://youtube.com/watch?v=" + fetchData.latest_video).toString()})
             }
         }
     }
@@ -595,7 +593,7 @@ async function botReminder(msg) {
         }
     }
 
-    insertStatementDB("p_reminder(server_id, server_reminder, reminder_text, schedule, reminder_from, reminder_to)", msg.guild.id, serverSpecific, reminderText, schedule, reminderFrom, reminderTo);
+    await insertStatementDB("p_reminder(server_id, server_reminder, reminder_text, schedule, reminder_from, reminder_to)", msg.guild.id, serverSpecific, reminderText, schedule, reminderFrom, reminderTo);
 
     msg.type.reply({content: "New reminder has been added!", ephemeral: true})
 }
@@ -631,7 +629,7 @@ async function botJournal(msg) {
         journalTitle = null;
     }
     
-    insertStatementDB("p_journal(user_id, journal_whole_name, journal_chapter, journal_page, journal_title, journal_entry, journal_part, time)", msg.author.id, journalName, chapter, page, journalTitle, entry, part, Date.now())
+    await insertStatementDB("p_journal(user_id, journal_whole_name, journal_chapter, journal_page, journal_title, journal_entry, journal_part, time)", msg.author.id, journalName, chapter, page, journalTitle, entry, part, Date.now())
 
     msg.type.reply("New journal has been added!")
 }

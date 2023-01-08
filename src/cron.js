@@ -41,7 +41,7 @@ function quickConvert(number, index) {
 export const cronChecker = (query) => {
     //date stuff
     let d = new Date();
-    let dateArray = [d.getMinutes(), d.getHours(), d.getDate(), d.getMonth(), d.getDay()]
+    let dateArray = [d.getMinutes(), d.getHours(), d.getDate(), d.getMonth()+1, d.getDay()]
 
     let queryArray = query.split(" ");
     for (let i = 0; i < queryArray.length; i++) {

@@ -19,25 +19,20 @@ const client = initialiseDiscordJS();
 initialiseDB();
 
 async function autoPostLoop(client) {
-    let allRotationsForServers = selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
+    let allRotationsForServers = await selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
     if (allRotationsForServers != '') {
-        let allRotationsForServersArray = allRotationsForServers.split('\n');
-        for (let i = 0; i < allRotationsForServersArray.length; i++) {
-            let resultArray = allRotationsForServersArray[i].split(', ');
-            let rotationQuery = resultArray[1];
-            let rotationServerID = resultArray[2];
-            let serverID = resultArray[3];
-            let channelQueryForServer = selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
-            if (channelQueryForServer !== "noChannelFoundForDrinkie") {
-                if (cronChecker(rotationQuery)) {
-                    let query = selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
-                    let filter = selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [rotationServerID, serverID]);
+        for (let i = 0; i < allRotationsForServers.length; i++) {
+            let channelQueryForServer = await selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [allRotationsForServers[i].server_query_id, allRotationsForServers[i].server_id]);
+            if (channelQueryForServer.channel_name !== "noChannelFoundForDrinkie") {
+                if (cronChecker(allRotationsForServers[i].rotation)) {
+                    let query = await selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [allRotationsForServers[i].server_query_id, allRotationsForServers[i].server_id]);
+                    let filter = await selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [allRotationsForServers[i].server_query_id, allRotationsForServers[i].server_id]);
                     try {
-                        let imageReturned = await getDerpibooruImage(query, filter, client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
+                        let imageReturned = await getDerpibooruImage(query, filter, client.guilds.cache.get(allRotationsForServers[i].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
                         if (imageReturned !== undefined) {
-                            send(imageReturned, false, null, client, '', serverID, channelQueryForServer);
+                            send(imageReturned, false, null, client, '', allRotationsForServers[i].server_id, channelQueryForServer);
                         } else {
-                            client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
+                            client.guilds.cache.get(allRotationsForServers[i].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
                         }
                     } catch (error) {
                         console.log(error);
@@ -49,36 +44,34 @@ async function autoPostLoop(client) {
 }
 
 async function reminderChecker() {
-    let fetchReminders = selectAllStatementDB("reminder_id, server_id, server_reminder, schedule, reminder_from, reminder_to", "p_reminder", null, null, null);
+    let fetchReminders = await selectAllStatementDB("reminder_id, server_id, server_reminder, schedule, reminder_from, reminder_to", "p_reminder", null, null, null);
     if (fetchReminders !== "") {
-        let fetchRemindersArray = fetchReminders.split('\n');
-        for (let i = 0; i < fetchRemindersArray.length; i++) {
-            let reminderArray = fetchRemindersArray[i].split(', ');
-            let serverID = reminderArray[1];
-            let serverReminder = reminderArray[2];
-            let reminderText = selectAllStatementDB("reminder_text", "p_reminder", ["reminder_id"], "=", [reminderArray[0]])
-            let schedule = reminderArray[3];
-            let reminderFrom = reminderArray[4];
-            let reminderTo = reminderArray[5];
+        for (let i = 0; i < fetchReminders.length; i++) {
+            let reminderText = await selectAllStatementDB("reminder_text", "p_reminder", ["reminder_id"], "=", [reminderArray[0]])
+            let reminderFrom;
+            let reminderTo;
 
-            if (reminderArray[4] == "null") {
+            if (fetchReminders[i][4] == "null") {
                 reminderFrom = null;
+            } else {
+                reminderFrom = fetchReminders[i].reminder_from;
             }
 
-            if (reminderArray[5] == "null") {
+            if (fetchReminders[i][5] == "null") {
                 reminderTo = null;
+            } else {
+                reminderTo = fetchReminders[i].reminder_to;
             }
 
-            let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [serverID]);
-            if (cronChecker(schedule)) {
+            let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [fetchReminders[i].server_id]);
+            if (cronChecker(fetchReminders[i].schedule)) {
                 let text = `${reminderTo ? "Hey " + reminderTo + ", " : ""}${reminderText}${reminderFrom ? ", from " + reminderFrom + "." : ""}`;
-                console.log(serverReminder);
-                if (serverReminder == 'true') {
-                    client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(text);
+                if (fetchReminders[i].server_reminder == 'true') {
+                    client.guilds.cache.get(fetchReminders[i].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(text);
                 } else {
-                    [...client.guilds.cache.values()].forEach(guild => {
-                        let toggleSetting = selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
-                        let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
+                    [...client.guilds.cache.values()].forEach(async guild => {
+                        let toggleSetting = await selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
+                        let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
                         if (toggleSetting == 1) {
                             guild.channels.cache.get(defaultChannel.replace('<#', '').replace('>', '')).send(text);
                         }
@@ -92,26 +85,25 @@ async function reminderChecker() {
 async function checkForLatest(client) {
     //get all db entries
     //id, server_id, content, channel, last video
-    let fetcherIDsDBRes = selectAllStatementDB("fetcher_id, server_id", "p_fetcher", null, null, null);
-    if (fetcherIDsDBRes !== "") {
-        let fetcherIDsArray = fetcherIDsDBRes.split('\n')
+    let fetcherIDsArray = await selectAllStatementDB("fetcher_id", "p_fetcher", null, null, null);
+    if (fetcherIDsArray !== "") {
         for (let i = 0; i < fetcherIDsArray.length; i++) {
-            let fetcherIDs = fetcherIDsArray[i].split(',');
-            let checkFrom = selectAllStatementDB("content", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-            let serverID = selectAllStatementDB("server_id", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-            let channelLink = selectAllStatementDB("channel_link", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-            let latestVideo = selectAllStatementDB("latest_video", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-            let latestVtime = selectAllStatementDB("latest_vtime", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-            let channelName = selectAllStatementDB("channel_name", "p_fetcher", ["fetcher_id"], "=", [fetcherIDs[0]]);
-            let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [serverID]);
+            /*let checkFrom = await selectAllStatementDB("content", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
+            let serverID = await selectAllStatementDB("server_id", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
+            let channelLink = await selectAllStatementDB("channel_link", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
+            let latestVideo = await selectAllStatementDB("latest_video", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
+            let latestVtime = await selectAllStatementDB("latest_vtime", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
+            let channelName = await selectAllStatementDB("channel_name", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);*/
+            let videoDetails = await selectAllStatementDB("content, server_id, channel_link, latest_video, latest_vtime, channel_name", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray[i].fetcher_id]);
+            let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [videoDetails[0].server_id]);
             const link = "https://www.googleapis.com/youtube/v3/";
             const ytRegex = /\"externalId\":\"(.*?)\"/;
             if (defaultChannel !== "") {
-                switch(checkFrom) {
+                switch(videoDetails[0].content) {
                     case 'youtube': {
                         //get latest video link
-                        if (channelLink !== "") {
-                            let respYT = await fetch(channelLink).catch((error) => console.error(error));
+                        if (videoDetails[0].channel_link !== "") {
+                            let respYT = await fetch(videoDetails[0].channel_link).catch((error) => console.error(error));
                             if (!respYT.ok) {continue}
                             let pageHTML = await respYT.text();
                             let youtubeChannId = ytRegex.exec(pageHTML);
@@ -123,24 +115,24 @@ async function checkForLatest(client) {
                                 let latestVideosResp = await fetch(link + "playlistItems?part=snippet&playlistId=" + userUploadsId + "&maxResults=20&key=" + yt_api_key).catch((error) => console.error(error));
                                 if (!apiResultResp.ok) {continue}
                                 let latestVideos = await latestVideosResp.json();
-                                if (latestVideo === "" && latestVtime === "") {
-                                    updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
-                                    updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
+                                if (videoDetails.latest_video === "" && videoDetails.latest_vtime === "") {
+                                    await updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDsArray[i].fetcher_id]);
+                                    await updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDsArray[i].fetcher_id]);
                                 } else {
                                     let newToOldFound;
-                                    if (latestVideo !== latestVideos.items[0].snippet.resourceId.videoId) {
+                                    if (videoDetails[0].latest_video !== latestVideos.items[0].snippet.resourceId.videoId) {
                                         let videosFound = [];
                                         for (let j = 0; j < latestVideos.items.length; j++) {
                                             //found last video
-                                            if (latestVideos.items[j].snippet.resourceId.videoId === latestVideo) {
-                                                let lengthOfMsg = "New video from " + channelName + " has been uploaded";
+                                            if (latestVideos.items[j].snippet.resourceId.videoId === videoDetails.latest_video) {
+                                                let lengthOfMsg = "New video from " + videoDetails.channel_name + " has been uploaded";
                                                 if (videosFound.length > 1) {
-                                                    lengthOfMsg = videosFound.length + " new videos from " + channelName + " has been uploaded."
+                                                    lengthOfMsg = videosFound.length + " new videos from " + videoDetails.channel_name + " has been uploaded."
                                                 }
-                                                updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
-                                                updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
+                                                await updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDsArray[i].fetcher_id]);
+                                                await updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDsArray[i].fetcher_id]);
                                                 //alert of upload(s)
-                                                client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(lengthOfMsg + "\n" + videosFound.map(e => "https://youtube.com/watch?v=" + e + "\n").toString().replaceAll(',', ''));
+                                                client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(lengthOfMsg + "\n" + videosFound.map(e => "https://youtube.com/watch?v=" + e + "\n").toString().replaceAll(',', ''));
                                                 newToOldFound=true;
                                                 break;
                                             //have not found it
@@ -151,9 +143,9 @@ async function checkForLatest(client) {
                                         }
                                         if (newToOldFound == false) {
                                             //alert of deleted old video
-                                            updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDs[0]]);
-                                            updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDs[0]]);
-                                            client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("Unlisting/Privating/Removal of video from  " + channelName + ": https://youtube.com/watch?v=" + latestVideo);
+                                            await updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDsArray[i].fetcher_id]);
+                                            await updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDsArray[i].fetcher_id]);
+                                            client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("Unlisting/Privating/Removal of video from  " + videoDetails.channel_name + ": https://youtube.com/watch?v=" + videoDetails.latest_video);
                                         }
                                     } 
                                 }
@@ -162,7 +154,7 @@ async function checkForLatest(client) {
                         break;
                     }
                     default: {
-                        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("We currently cannot check from this source...stay tuned though!");
+                        client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("We currently cannot check from this source...stay tuned though!");
                     }
                 }
             }
@@ -170,10 +162,10 @@ async function checkForLatest(client) {
     }
 }
 
-function broadcastChange(guild, fileStream) {
-    let toggleSetting = selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
-    let validBroadcast = selectAllStatementDB("broadcast_valid", "p_broadcasts", ["server_id"], "=", [guild.id]);
-    let defaultChannel = selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
+async function broadcastChange(guild, fileStream) {
+    let toggleSetting = await selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
+    let validBroadcast = await selectAllStatementDB("broadcast_valid", "p_broadcasts", ["server_id"], "=", [guild.id]);
+    let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
     if (toggleSetting == "1" && defaultChannel !== "noChannelFoundForDrinkie" && validBroadcast == "1") {
         guild.channels.cache.get(defaultChannel.replace('<#', '').replace('>', '')).send("Changelog: \n```" + fileStream.toString() + "```");
     }
@@ -190,12 +182,12 @@ function broadcastChange(guild, fileStream) {
 client.on('ready', () => {
     client.user.setActivity(prefix + ' help or /help');
     let fileStream = fs.readFileSync(dirname(fileURLToPath(import.meta.url)) + '/../changes.txt');
-    [...client.guilds.cache.values()].forEach(guild => {
-        insertGuildDetails(guild);
+    [...client.guilds.cache.values()].forEach(async guild => {
+        await insertGuildDetails(guild);
         if (fileStream.toString() !== "") {
             broadcastChange(guild, fileStream);
         }
-        updateStatementDB("p_broadcasts", "broadcast_valid", ["server_id"], ["0", guild.id]);
+        await updateStatementDB("p_broadcasts", "broadcast_valid", ["server_id"], ["0", guild.id]);
     });
     //every minute
     nodeCron.job(
@@ -226,17 +218,17 @@ client.on('ready', () => {
     )
 });
 
-client.on('guildDelete', guild => {
+client.on('guildDelete', async guild => {
     if (guild.available) {
-        removeStatementDB("p_rotation", ["server_id"], [guild.id]);
-        removeStatementDB("p_queries", ["server_id"], [guild.id]);
-        removeStatementDB("p_queue", ["server_id"], [guild.id]);
-        removeStatementDB("p_server", ["server_id"], [guild.id]);
+        await removeStatementDB("p_rotation", ["server_id"], [guild.id]);
+        await removeStatementDB("p_queries", ["server_id"], [guild.id]);
+        await removeStatementDB("p_queue", ["server_id"], [guild.id]);
+        await removeStatementDB("p_server", ["server_id"], [guild.id]);
     }
 });
 
-client.on('guildCreate', guild => {
-    insertGuildDetails(guild);
+client.on('guildCreate', async guild => {
+    await insertGuildDetails(guild);
 });
 
 client.on('messageCreate', msg => {

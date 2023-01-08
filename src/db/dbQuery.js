@@ -5,14 +5,16 @@ import {dbConnect} from './db.js';
  * @param {string} insertTable Table to insert data into
  * @param {string[]} dbArgs Rest parameter which contains all arguments needed for insert DB statements
  */
-export const insertStatementDB = (insertTable, ...dbArgs) => {
+export async function insertStatementDB(insertTable, ...dbArgs) {
     let dbCon = dbConnect();
 
     let argsNumbered = dbArgs.map((name, i) => "$"+(i+1)).join(",")
     
-    dbCon.querySync("INSERT INTO " +  insertTable + " VALUES (" + argsNumbered + ")", dbArgs);
+    //dbCon.querySync("INSERT INTO " +  insertTable + " VALUES (" + argsNumbered + ")", dbArgs);
+    await dbCon.query("INSERT INTO " +  insertTable + " VALUES (" + argsNumbered + ")", dbArgs);
 
-    dbCon.end();
+    //dbCon.end();
+    await dbCon.end();
 }
 
 /**
@@ -23,21 +25,20 @@ export const insertStatementDB = (insertTable, ...dbArgs) => {
  * @param {string} equalsTo Relation between column and answer
  * @param {string} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
  */
-export const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo, whereAnswer) => {
-    let allResults = '';
+export async function selectAllStatementDB(selectColumns, table, whereColumn, equalsTo, whereAnswer) {
     let statement = '';
-    let columnArray = selectColumns.split(", ");
-    
     let dbCon = dbConnect();
 
     if (whereColumn != null) {
         statement = ' WHERE ' + whereColumn.map((column, i) => i === 0 || column.length === 1 ? `${column} ${equalsTo} $${i+1} ` : `AND ${column} ${equalsTo} $${i+1}`).join("")
     }
-    let dbResults = dbCon.querySync(`SELECT ${selectColumns} FROM ${table}${statement}`, whereAnswer)
+    //let dbResults = dbCon.querySync(`SELECT ${selectColumns} FROM ${table}${statement}`, whereAnswer)
+    let dbResults = await dbCon.query(`SELECT ${selectColumns} FROM ${table}${statement}`, whereAnswer)
 
-    dbCon.end();
+    //dbCon.end();
+    await dbCon.end();
 
-    for (var i = 0; i < dbResults.length; i++) {
+    /*for (var i = 0; i < dbResults.length; i++) {
         if (columnArray.length > 1) {
             for (let j = 0; j < columnArray.length; j++) {
                 let resultColumn = columnArray[j];
@@ -59,9 +60,16 @@ export const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo
 
     if (columnArray.length > 1) {
         allResults = allResults.slice(0, -1);
+    }*/
+    if (selectColumns.includes("MAX")) {
+        return dbResults.rows[0].max;
+    } else if (selectColumns.includes("COUNT")) {
+        return dbResults.rows[0].count;
+    } else if (!selectColumns.includes(",") && whereColumn != null) {
+        return dbResults.rows[0][selectColumns];
+    } else {
+        return dbResults.rows;
     }
-
-    return allResults;
 }
 
 /**
@@ -72,13 +80,15 @@ export const selectAllStatementDB = (selectColumns, table, whereColumn, equalsTo
  * @param {string} whereColumn Identification clarification to help determine which data will be selected (the specific column where the data is)
  * @param {string} whereAnswer Identification clarification to help determine which data will be selected (the specific data necessary)
  */
-export const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) => {
+export async function updateStatementDB(table, setColumn, whereColumns, whereAnswers) {
     let dbCon = dbConnect();
 
     let statement = whereColumns.map((column, i) => i === (whereColumns.length-1) && i !== 0 ? " AND " + column + " = $" + (i+2) : column + " = $" + (i+2)).join("");
-    dbCon.querySync("UPDATE " + table + " SET " + setColumn + " = $1 WHERE " + statement, whereAnswers)
+    //dbCon.querySync("UPDATE " + table + " SET " + setColumn + " = $1 WHERE " + statement, whereAnswers)
+    await dbCon.query("UPDATE " + table + " SET " + setColumn + " = $1 WHERE " + statement, whereAnswers)
     
-    dbCon.end();
+    //dbCon.end();
+    await dbCon.end();
 }
 
 /**
@@ -88,14 +98,16 @@ export const updateStatementDB = (table, setColumn, whereColumns, whereAnswers) 
  * @param {string} whereColumn The specific column where data will be removed from.
  * @param {string} whereAnswer The identifier to help clarify which data will be removed
  */
-export const removeStatementDB = (table, whereColumns, whereAnswers) => {
+export async function removeStatementDB(table, whereColumns, whereAnswers) {
     let dbCon = dbConnect();
 
     let statement = whereColumns.map((column, i) => i === (whereColumns.length-1) && i !== 0 ? " AND " + column + " = $" + (i+1) : column + " = $" + (i+1)).join("");
 
-    dbCon.querySync("DELETE FROM " + table + " WHERE " + statement, whereAnswers);
+    //dbCon.querySync("DELETE FROM " + table + " WHERE " + statement, whereAnswers);
+    await dbCon.query("DELETE FROM " + table + " WHERE " + statement, whereAnswers);
     
-    dbCon.end();
+    //dbCon.end();
+    await dbCon.end();
 }
 
 /**
@@ -103,34 +115,34 @@ export const removeStatementDB = (table, whereColumns, whereAnswers) => {
  * @public
  * @param {object} guild Represents Discord server (the server that Drinkie tries to initalise herself on)
  */
-export const insertGuildDetails = (guild) => {
+export async function insertGuildDetails(guild) {
     let pQuery = "pinkie pie, safe, solo, !webm, score.gte:100";
     let pRotation = "0 0/6 * * *";
 
-    let guildInfo = selectAllStatementDB("server_id", "p_server", ["server_id"], "=", [guild.id]);
+    let guildInfo = await selectAllStatementDB("server_id", "p_server", ["server_id"], "=", [guild.id]);
     if (guildInfo !== guild.id) {
-        insertStatementDB("p_server(server_id, server_name, default_channel)", guild.id, guild.name, 'noChannelFoundForDrinkie');
+        await insertStatementDB("p_server(server_id, server_name, default_channel)", guild.id, guild.name, 'noChannelFoundForDrinkie');
     }
-    let queryInfo = selectAllStatementDB("server_id", "p_queries", ["server_id"], "=", [guild.id]);
+    let queryInfo = await selectAllStatementDB("server_id", "p_queries", ["server_id"], "=", [guild.id]);
     if (queryInfo !== guild.id) {
-        insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", pQuery, 'noChannelFoundForDrinkie', guild.id, 0);
+        await insertStatementDB("p_queries(search_query, channel_name, server_id, server_query_id)", pQuery, 'noChannelFoundForDrinkie', guild.id, 0);
     }
-    let rotationInfo = selectAllStatementDB("server_id", "p_rotation", ["server_id"], "=", [guild.id]);
+    let rotationInfo = await selectAllStatementDB("server_id", "p_rotation", ["server_id"], "=", [guild.id]);
     if (rotationInfo !== guild.id) {
-        insertStatementDB("p_rotation(rotation, server_id, server_query_id)", pRotation, guild.id, 0);
+        await insertStatementDB("p_rotation(rotation, server_id, server_query_id)", pRotation, guild.id, 0);
     }
-    let queueInfo = selectAllStatementDB("server_id", "p_queue", ["server_id"], "=", [guild.id]);
+    let queueInfo = await selectAllStatementDB("server_id", "p_queue", ["server_id"], "=", [guild.id]);
     if (queueInfo !== guild.id) {
-        insertStatementDB("p_queue(server_id, queue_data)", guild.id, 'noDataFoundInQueue');
+        await insertStatementDB("p_queue(server_id, queue_data)", guild.id, 'noDataFoundInQueue');
     }
-    let permissionInfo = selectAllStatementDB("server_id", "p_permissions", ["server_id"], "=", [guild.id]);
+    let permissionInfo = await selectAllStatementDB("server_id", "p_permissions", ["server_id"], "=", [guild.id]);
     if (permissionInfo !== guild.id) {
-        insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '0', '5');
-        insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '1', '5');
-        insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '2', '2');
+        await insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '0', '5');
+        await insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '1', '5');
+        await insertStatementDB("p_permissions(server_id, permission_functionality, permission_value)", guild.id, '2', '2');
     }
-    let broadcastInfo = selectAllStatementDB("server_id", "p_broadcasts", ["server_id"], "=", [guild.id]);
+    let broadcastInfo = await selectAllStatementDB("server_id", "p_broadcasts", ["server_id"], "=", [guild.id]);
     if (broadcastInfo !== guild.id) {
-        insertStatementDB("p_broadcasts(server_id, broadcast_toggle, broadcast_valid)", guild.id, '0', '0');
+        await insertStatementDB("p_broadcasts(server_id, broadcast_toggle, broadcast_valid)", guild.id, '0', '0');
     }
 }
