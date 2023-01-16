@@ -7,7 +7,6 @@
     "node": "18.10.0",
     "npm": "8.19.2"
   },
-  "main": "post.js",
   "scripts": {
     "start": "node --experimental-specifier-resolution=node src/main.js",
     "build": "node src/commands.js && node src/update.js",
