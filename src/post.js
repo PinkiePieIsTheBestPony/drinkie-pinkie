@@ -13,18 +13,18 @@ import {selectAllStatementDB} from './db/dbQuery.js';
  */
 export const send = (derpiObject, isRequest, messageObject, client, message, serverID, channelQueryForServer) => {
     if (channelQueryForServer != null && !isRequest && messageObject == null && serverID != null) {
-        client.guilds.cache.get(serverID).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send({embeds: [createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});   
+        client.guilds.cache.get(serverID).channels.cache.find(channel => channel.id === channelQueryForServer).send({embeds: [createEmbeddedImg(derpiObject, derpiObject["viewUrl"])]});   
     } else if (isRequest == false && channelQueryForServer == null && derpiObject == null) {
         if (serverID != null) {
             serverID.forEach(guild => {
-                let channelName = guild.channels.cache.find(channel => "<#" + channel.id + ">" === selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]));
+                let channelName = guild.channels.cache.find(channel => + channel.id === selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]));
                 if (channelName !== undefined) {
                     channelName.send({content: message});
                 }
             }); 
         } else {
             [...client.guilds.cache.values()].forEach(guild => {
-                let channelName = guild.channels.cache.find(channel => "<#" + channel.id + ">" === selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]))
+                let channelName = guild.channels.cache.find(channel => channel.id === selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]))
                 if (channelName !== undefined) {
                     channelName.send({content: message})
                 }});

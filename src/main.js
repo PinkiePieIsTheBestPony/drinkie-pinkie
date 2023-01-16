@@ -22,16 +22,16 @@ async function autoPostLoop(client) {
     if (allRotationsForServers != '') {
         for (let i = 0; i < allRotationsForServers.length; i++) {
             let channelQueryForServer = await selectAllStatementDB("channel_name", "p_queries", ["server_query_id", "server_id"], "=", [allRotationsForServers[i].server_query_id, allRotationsForServers[i].server_id]);
-            if (channelQueryForServer.channel_name !== "noChannelFoundForDrinkie") {
+            if (channelQueryForServer !== "noChannelFoundForDrinkie") {
                 if (cronChecker(allRotationsForServers[i].rotation)) {
                     let query = await selectAllStatementDB("search_query", "p_queries", ["server_query_id", "server_id"], "=", [allRotationsForServers[i].server_query_id, allRotationsForServers[i].server_id]);
                     let filter = await selectAllStatementDB("filter_id", "p_queries", ["server_query_id", "server_id"], "=", [allRotationsForServers[i].server_query_id, allRotationsForServers[i].server_id]);
                     try {
-                        let imageReturned = await getDerpibooruImage(query, filter, client.guilds.cache.get(allRotationsForServers[i].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).nsfw)
+                        let imageReturned = await getDerpibooruImage(query, filter, client.guilds.cache.get(allRotationsForServers[i].server_id).channels.cache.find(channel => channel.id === channelQueryForServer).nsfw)
                         if (imageReturned !== undefined) {
                             send(imageReturned, false, null, client, '', allRotationsForServers[i].server_id, channelQueryForServer);
                         } else {
-                            client.guilds.cache.get(allRotationsForServers[i].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
+                            client.guilds.cache.get(allRotationsForServers[i].server_id).channels.cache.find(channel => + channel.id === channelQueryForServer).send("No results found...either you have an obscure query, use a filter which blocks one of your tags, or you have made a mistake. Check query with `!dpi settings query list` and edit it with: `!dpi settings edit query <query_id> <query_list>`");
                         }
                     } catch (error) {
                         console.log(error);
@@ -66,7 +66,7 @@ async function reminderChecker() {
             if (cronChecker(fetchReminders[i].schedule)) {
                 let text = `${reminderTo ? "Hey " + reminderTo + ", " : ""}${reminderText}${reminderFrom ? ", from " + reminderFrom + "." : ""}`;
                 if (fetchReminders[i].server_reminder == 'true') {
-                    client.guilds.cache.get(fetchReminders[i].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(text);
+                    client.guilds.cache.get(fetchReminders[i].server_id).channels.cache.find(channel => channel.id === defaultChannel).send(text);
                 } else {
                     [...client.guilds.cache.values()].forEach(async guild => {
                         let toggleSetting = await selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
@@ -131,7 +131,7 @@ async function checkForLatest(client) {
                                                 await updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDsArray[i].fetcher_id]);
                                                 await updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDsArray[i].fetcher_id]);
                                                 //alert of upload(s)
-                                                client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send(lengthOfMsg + "\n" + videosFound.map(e => "https://youtube.com/watch?v=" + e + "\n").toString().replaceAll(',', ''));
+                                                client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => + channel.id === defaultChannel).send(lengthOfMsg + "\n" + videosFound.map(e => "https://youtube.com/watch?v=" + e + "\n").toString().replaceAll(',', ''));
                                                 newToOldFound=true;
                                                 break;
                                             //have not found it
@@ -144,7 +144,7 @@ async function checkForLatest(client) {
                                             //alert of deleted old video
                                             await updateStatementDB("p_fetcher", "latest_video", ["fetcher_id"], [latestVideos.items[0].snippet.resourceId.videoId, fetcherIDsArray[i].fetcher_id]);
                                             await updateStatementDB("p_fetcher", "latest_vtime", ["fetcher_id"], [latestVideos.items[0].snippet.publishedAt, fetcherIDsArray[i].fetcher_id]);
-                                            client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("Unlisting/Privating/Removal of video from  " + videoDetails.channel_name + ": https://youtube.com/watch?v=" + videoDetails.latest_video);
+                                            client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => + channel.id === defaultChannel).send("Unlisting/Privating/Removal of video from  " + videoDetails.channel_name + ": https://youtube.com/watch?v=" + videoDetails.latest_video);
                                         }
                                     } 
                                 }
@@ -153,7 +153,7 @@ async function checkForLatest(client) {
                         break;
                     }
                     default: {
-                        client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => "<#" + channel.id + ">" === defaultChannel).send("We currently cannot check from this source...stay tuned though!");
+                        client.guilds.cache.get(videoDetails[0].server_id).channels.cache.find(channel => + channel.id === defaultChannel).send("We currently cannot check from this source...stay tuned though!");
                     }
                 }
             }

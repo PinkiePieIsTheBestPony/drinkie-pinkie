@@ -173,7 +173,7 @@ export async function channelEdit(msg) {
     if (!isNaN(number)) {
         let numberExists = await selectAllStatementDB("server_query_id", "p_queries", ["server_id", "server_query_id"], "=", [msg.guild.id, number]);
         if (numberExists !== false) {
-            let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName);
+            let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName).id;
             if (channelId !== undefined) {
                 await updateStatementDB("p_queries", "channel_name", ["server_id", "server_query_id"], [channelId, msg.guild.id, number]);
                 msg.type.reply("Image schedule ID:" + number + " channel has been updated.")
@@ -192,7 +192,7 @@ export async function channelEdit(msg) {
 
 export async function channelDefaultEdit(msg) {
     let channelName = msg.content.substr(msg.content.indexOf(" ") + 1);
-    let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName);
+    let channelId = msg.guild.channels.cache.find(channel => channel.name === channelName).id;
     if (channelId !== undefined) {
         await updateStatementDB("p_server", "default_channel", ["server_id"], [channelId, msg.guild.id]);
         msg.type.reply("Default channel has been updated.")
