@@ -16,7 +16,6 @@ import fs from 'fs';
  * Initialises Drinkie client user, along with the DB and Twitter connectivity.
  */
 const client = initialiseDiscordJS();
-initialiseDB();
 
 async function autoPostLoop(client) {
     let allRotationsForServers = await selectAllStatementDB("rotation_id, rotation, server_query_id, server_id", "p_rotation", null, null, null);
@@ -179,7 +178,8 @@ async function broadcastChange(guild, fileStream) {
  * 3) If the time matches with cron, get output from table which stores the query.
  * 4) Connect to Derpi and run query, fetch image from query and post to relevant server.
  */
-client.on('ready', () => {
+client.on('ready', async () => {
+    await initialiseDB();
     client.user.setActivity(prefix + ' help or /help');
     let fileStream = fs.readFileSync(dirname(fileURLToPath(import.meta.url)) + '/../changes.txt');
     [...client.guilds.cache.values()].forEach(async guild => {

@@ -66,7 +66,11 @@ export async function selectAllStatementDB(selectColumns, table, whereColumn, eq
     } else if (selectColumns.includes("COUNT")) {
         return dbResults.rows[0].count;
     } else if (!selectColumns.includes(",") && whereColumn != null) {
-        return dbResults.rows[0][selectColumns];
+        if (dbResults.rows.length == 0) {
+            return null;
+        } else {
+            return dbResults.rows[0][selectColumns];
+        }
     } else {
         return dbResults.rows;
     }
