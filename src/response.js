@@ -42,8 +42,8 @@ async function botNewTalk(msg, client) {
         }
     }
     let jsonDBPrompts = await selectAllStatementDB("query_id, json_prompt", "p_prompts", null, null, null);
-    let allCurrentPrompts = jsonDBPrompts.split(",")[1].split('\n');
-    for (let x = 0; x < allCurrentPrompts.length; x++) {
+    for (let x = 0; x < jsonDBPrompts.length; x++) {
+        let allCurrentPrompts = jsonDBPrompts[x].json_prompt.split(":")[1];
         if (allCurrentPrompts[x].toLowerCase().includes(msgPrompt.toLowerCase())) {
             msg.type.reply({ephemeral: true, content: "Exact prompt already exists!"});
             return;
