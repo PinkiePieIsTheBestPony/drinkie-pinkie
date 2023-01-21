@@ -90,10 +90,10 @@ export const randomNumber = (min, max) => {
  * @param {number} botNum Drinkie's number that was randomly generated (through randomNumber() function above)
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  */
-export const decision = (userNum, botNum, msg) => {
-    let users = selectAllStatementDB("user_id, date_guessed, cooldown_time", "p_guesses", null, null, null);
-    let jsonDB = selectAllStatementDB("query_id, json_prompt", "p_prompts", null, null, null);
-    let jsonDBResp = selectAllStatementDB("query_id, json_response", "p_prompts", null, null, null);
+export async function decision(userNum, botNum, msg) {
+    let users = await selectAllStatementDB("user_id, date_guessed, cooldown_time", "p_guesses", null, null, null);
+    let jsonDB = await selectAllStatementDB("query_id, json_prompt", "p_prompts", null, null, null);
+    let jsonDBResp = await selectAllStatementDB("query_id, json_response", "p_prompts", null, null, null);
     let jsonDBArray = jsonDB.split('\n');
     let jsonDBArrayResp = jsonDBResp.split('\n').filter(a => a[1].includes(msg.guild.id) || a[1].includes("all"));
     let a = jsonDBArrayResp.length;
@@ -121,13 +121,13 @@ export const decision = (userNum, botNum, msg) => {
                     //promptNum = randomNumber(1, numOfResp);
                     promptNum = randomNumber(1, a)
                     let indexPromptNum = jsonDBArrayResp[0][a];
-                    let authorID = selectAllStatementDB("submitted_by", "p_prompts", ["query_id"], "=", [indexPromptNum]);
+                    let authorID = await selectAllStatementDB("submitted_by", "p_prompts", ["query_id"], "=", [indexPromptNum]);
                     msg.type.reply(response + "The number that you said or generated was the same as mine! Here is your random prompt: \"" + sentMsg[promptNum] + "\" which was provided by: <@!" + authorID + ">");
                 }
                 else {
                     msg.type.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
-                    updateStatementDB("p_guesses", "date_guessed", ["user_id"], [currentTime, msg.author.id]);
-                    updateStatementDB("p_guesses", "cooldown_time", ["user_id"], ["4", msg.author.id]);
+                    await updateStatementDB("p_guesses", "date_guessed", ["user_id"], [currentTime, msg.author.id]);
+                    await pdateStatementDB("p_guesses", "cooldown_time", ["user_id"], ["4", msg.author.id]);
                 }
                 
             }
@@ -138,7 +138,7 @@ export const decision = (userNum, botNum, msg) => {
         }
     }
     if (!userExist) {
-        insertStatementDB("p_guesses", msg.author.id, Date.now()-14400000, "4");
+        await insertStatementDB("p_guesses", msg.author.id, Date.now()-14400000, "4");
         let response = 'Your number was: "' + userNum + '" while mine was "' + botNum + '". \n';
         if (userNum == botNum) {
             promptNum = randomNumber(1, numOfResp);
@@ -146,7 +146,7 @@ export const decision = (userNum, botNum, msg) => {
         }
         else {
             msg.type.reply(response + "Too bad...the numbers were different. Try again in 4 hours.");
-            updateStatementDB("p_guesses", "date_guessed", ["user_id"], [Date.now(), msg.author.id]);
+            await updateStatementDB("p_guesses", "date_guessed", ["user_id"], [Date.now(), msg.author.id]);
         }
     }
 }
@@ -157,20 +157,19 @@ export const decision = (userNum, botNum, msg) => {
  * @param {object} msg [Discord.js] Message object, generated based on message by user
  * @param {object} client [Discord.js] Client object, this represents Drinkie on the server where the message was sent
  */
-export const getPrompts = (msg, client) => {
+export async function getPrompts(msg, client) {
     //tupper comments are triggered by certain characters from their hosts, which are typically non alphabetic/numerical.
     //the regex checks if a comment mentioning drinkie has one of these "trigger" characters. drinkie will ignore the trigger comment and only respond to the tupper.
     const regx = /^[a-zA-Z0-9]/;
-    let jsonDB = selectAllStatementDB("json_prompt, json_response", "p_prompts", null, null, null);
-    let jsonDBArray = jsonDB.split('\n');
+    let jsonDB = await selectAllStatementDB("json_prompt, json_response", "p_prompts", null, null, null);
     let jsonPrompt = '';
     let jsonResponse = '';
     
     //builds JSON object from values within DB
-    for (let i = 0; i < jsonDBArray.length; i++) {
-        let resultArray = jsonDBArray[i].split('", ');
-        jsonPrompt += resultArray[0] + "\", ";
-        jsonResponse += resultArray[1] + ", ";
+    for (let i = 0; i < jsonDB.length; i++) {
+        //let resultArray = jsonDB[i].split('", ');
+        jsonPrompt += jsonDB[i].json_prompt + ", ";
+        jsonResponse += jsonDB[i].json_response + ", ";
     }
     jsonPrompt = jsonPrompt.slice(0, -2);
     jsonResponse = jsonResponse.slice(0, -2);
