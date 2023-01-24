@@ -1,4 +1,4 @@
-import {createEmbeddedHelp} from './external-libs/discord.js';
+import {createEmbeddedHelp, editEmbed} from './external-libs/discord.js';
 import {getDerpibooruImage} from './external-libs/derpi.js';
 import {send} from './post.js';
 import {botGames} from './games.js';
@@ -125,8 +125,28 @@ async function botGetImg(msg, client) {
  * @private
  * @param {object} msg Message object, generated based on message by user
  */
-function botGetHelp(msg) {
-    msg.type.reply({embeds: [createEmbeddedHelp(msg.content)]});
+async function botGetHelp(msg) {
+    let embeddedHelp = createEmbeddedHelp(msg.content);
+    let embedMsg;
+    if (embeddedHelp[0] == null) {
+        msg.type.reply({content: embeddedHelp[1]});
+    } else if (embeddedHelp[2] == null) {
+        msg.type.reply({embeds: [embeddedHelp[0]]});
+    } else if (msg.type.type === 'APPLICATION_COMMAND') {
+        msg.type.reply({embeds: [embeddedHelp[0]], components: [embeddedHelp[1]]});
+        embedMsg = await msg.type.fetchReply()
+    } else {
+        embedMsg = await msg.type.reply({embeds: [embeddedHelp[0]], components: [embeddedHelp[1]]});
+    }
+    if (embeddedHelp[2] !== null) {
+        let filter = embeddedHelp[2];
+        const collector = embedMsg.createMessageComponentCollector({ filter, time: 30000 });
+
+        collector.on('collect', async i => {
+            i.deferUpdate();
+            editEmbed(i, embeddedHelp[3], embedMsg, embeddedHelp[1])
+        });
+    }
 }
 
 /**
@@ -734,6 +754,7 @@ export const possibleResponsesSlash = (interaction, client) => {
     ]);
 
     const certainChoices = new Map([
+        ["help_choice", ["help_choice", 'help_command']],
         ["game_choice", ['game_choice', 'mention']],
         ["search", ['search', 'day']],
         ["scope", ['scope', 'prompt', 'who1', 'response1', 'who2', 'response2', 'who3', 'response3', 'who4', 'response4', 'who5', 'response5']],
@@ -808,7 +829,7 @@ export const possibleResponsesSlash = (interaction, client) => {
             }
         }
         values = values.join(' ');
-    } else if (name == 'game_choice' || name == 'search' || name == 'scope' || name == 'permission_functionality' || name == 'content_type' || name == 'server_specific' || name == 'journal_name') {
+    } else if (name == 'help_choice' || name == 'game_choice' || name == 'search' || name == 'scope' || name == 'permission_functionality' || name == 'content_type' || name == 'server_specific' || name == 'journal_name') {
         values = [];
         let choicesDict = certainChoices.get(name);
         for (let i = 0; i < choicesDict.length; i++) {

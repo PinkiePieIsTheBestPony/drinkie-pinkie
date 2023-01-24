@@ -1,60 +1,154 @@
 { "help": {
     "query": {
         "title": "Drinkie Pinkie's Query Help!",
+        "titlecommand": "Drinkie's Query Commands",
         "author": "Me, silly!",
         "color": "f5b7d0",
         "footer": "Drinkie Pinkie - Made with 💜",
         "description": "This bot allows for fully customisable scheduling of search queries from Derpibooru. This will essentially mean that on a per-guild basis, users can define what I search Derpibooru for, and control how frequently I post. I will go through all commands relating to this function and give an overview on what each do.",
         "fields": {
-            "Commands": "`(!dpi |/)settings query new <tag1>,<tag2>, <tag3>` - Will create a new schedule with your defined list. Note: each new query willcreate an associated default rotation, and can be changed by modifying the rotation (`dpi settings rotation edit <rotation_id> <cron>`). \n`(!dpi |/)settings query list` - Will provide a list of all current queries within the schedule. \n`(!dpi |/)settings query edit <query_id> <tag1>,<tag2>, <tag3>` - Will allow for the modification of a query. \n`(!dpi |/)settings query remove <query_id>` - Allows for the deletion of a query. \n`(!dpi |/)settings channel edit <query_id> <channel_name>` - Edits the channel that query is posting on. \n`(!dpi |/)settings channel default <channel_name>` - Default channel for bot commands. \n`(!dpi |/)settings filter edit <query_id> <derpi_filter_id>` - Change filter that queries run on (defaults to null, leave blank for null)"        
+            "Commands": {
+                "new": "`(!dpi |/)settings query new <tag1>,<tag2>, <tag3>` - Will create a new schedule with your defined list. (it also creates a corresponding rotational schedule)",
+                "list": "`(!dpi |/)settings query list` - Will provide a list of all current queries within the schedule.",
+                "edit": "`(!dpi |/)settings query edit <query_id> <tag1>,<tag2>, <tag3>` - Will allow for the modification of a query.",
+                "remove": "`(!dpi |/)settings query remove <query_id>` - Allows for the deletion of a query.",
+                "channel": "`(!dpi |/)settings channel edit <query_id> <channel_name>` - Edits the channel that query is posting on.",
+                "default": "`(!dpi |/)settings channel default <channel_name>` - Default channel for bot commands.",
+                "filter": "`(!dpi |/)settings filter edit <query_id> <derpi_filter_id>` - Change filter that queries run on (defaults to null, leave blank for null)"
+            }     
         }
     },
     "rotation": {
         "title": "Drinkie Pinkie's Rotation Help!",
+        "titlecommand": "Drinkie's Rotation Commands",
         "author": "Me, silly!",
         "color": "f5b7d0",
         "footer": "Drinkie Pinkie - Made with 💜",
         "description": "This bot allows for fully customisable scheduling of search queries from Derpibooru. This will essentially mean that on a per-guild basis, users can define what I search Derpibooru for, and control how frequently I post. I will go through all commands relating to this function and give an overview on what each do.",
         "fields": {
-            "Commands": "`(!dpi |/)settings rotation list` - Will provide a list of all current rotation timings within the schedule. \n`(!dpi |/)settings rotation edit <rotation_id> <timings>` - Will allow for the modification of a rotation.",
-            "Introduction": "This is necessary to explain how the rotation syntax works. The format of this rotation is very similar to a syntax used by a unix tool, called Cron. Here is an example - `2 4-6 5/10 4,8 *`. I will go through this.",
-            "Example Explained": "`1st value (minutes [0-59]) - 2`: A single number is defined. Will run when the specified number time has been fully matched. Will post 2 minutes past the hour. \n`2nd value (hours [0-23]) - 4-6`: A range of numbers are defined. Will run when the specified number time is within the range. Will post every hour from 4 to 6am. \n`3rd value (days of month [1-31]) - 5/10`: Combination of multiples and a range of numbers. The first half represents the multiple value, which will only run if the number time fits within the multiple. The second half is a range, which defines what parts of the time are valid. Will post every 5th day, as long as the date is after the 10th of the month. \n`4th value (months [1-12]) - 4,8`: Multiple numbers are defined. Will run when one of the listed specified number times have been fully matched. Will post on April & August. \n`5th value (days of week [1-7]) - *`: Wildcard value, will run for every value. In this case, will post on any day of week.",
-            "External Help": "If you're still confused, then contact this fella on Discord: Ponka#3440. Or try googling about Cron it might help since it can probably explain better."
+            "Commands": {
+                "list": "`(!dpi |/)settings rotation list` - Will provide a list of all current rotation timings within the schedule.",
+                "edit": "`(!dpi |/)settings rotation edit <rotation_id> <timings>` - Will allow for the modification of a rotation."
+            },
+            "Format Explained": { 
+                "minute": "`1st value (minutes [0-59])`: The first value in a cron range represents which minutes to run the event.",
+                "hour": "`2nd value (hours [0-23])`: The second value in a cron range represents which hours to run the event. 0 represents 12am, and 23 represents 11pm.",
+                "daymonth": "`3rd value (days of month [1-31])`: The third value in a cron range will represent the day of the month in the calendar to run the event. ",
+                "month": "`4th value (months [1-12])`: The fourth value in a cron range will represent the month of the year to run the event, 1 corresponds to January and it goes in order to 12 for December.",
+                "dayweek": "`5th value (days of week [1-7])`: The fifth value in a cron range will represent a day of the week to run the event. 1 represents Sunday, and 7 represents Saturday."
+            },
+            "Syntax Types": {
+                "single": "A single value `(i.e. 7)`, where only that value will be used to determine when something will run.",
+                "sequence": "A range of values `(i.e 2-4)`, where all values between the two mentioned values will be used to determine when something will run.",
+                "interval": "Values that run in an interval `(i.e. 5/10)`, where it runs at the interval of the first value, and starts that interval at the 2nd value.",
+                "multiple": "Multiple values `(i.e. 3, 15)`, that will run at each of the specified values.",
+                "all": "A value `(*)` that essentially will run at every possible value."
+            },
+            "External Help": "If you're still confused, search 'cron' on Google."
         }
     },
     "prompts": {
         "title": "Drinkie Pinkie's Prompts Help!",
+        "titlecommand": "Drinkie's Prompt Commands",
         "author": "Me, silly!",
         "color": "f5b7d0",
         "footer": "Drinkie Pinkie - Made with 💜",
         "description": "This bot allows you to insert your own custom prompts which can be guessed by others, and unique depending on who is saying the prompt!",
         "fields": {
-            "Commands": "`/talk` - This command will have me send you a message for you to privately send your new prompt to me. Not sure how to do that? I'll show an example and explain that!",
-            "Example": "`scope [all/this/<server_id(s)>]` -> which servers this prompt can be prompted from \n`prompt` -> defines actual prompt that needs to be typed \n`who(1-5) [everyone, user (not bot users), bot (tulpas), <user_id(s)>]` -> who will response of prompt be targetted to \n`response(1-5)` -> actual response text"
+            "Commands": {
+                "talk": "`/talk <scope> [all/this/server_id(s)] <prompt> <who>(1-5)[everyone/user/bot/user_id(s)] <response>(1-5)` - This command will have me send you a message for you to privately send your new prompt to me."
+            },
+            "Example": {
+                "1": "`scope [all/this/<server_id(s)>]` -> which servers this prompt can be prompted from", 
+                "2": "`prompt` -> defines actual prompt that needs to be typed",
+                "3": "`who(1-5) [everyone, user (not bot users), bot (tulpas), <user_id(s)>]` -> who will response of prompt be targetted to",
+                "4": "`response(1-5)` -> actual response text"
+            }
         }
     },
     "audio": {
         "title": "Drinkie Pinkie's Audio Help",
+        "titlecommand": "Drinkie's Audio Commands",
         "author": "Me, sily!",
         "color": "f5b7d0",
         "footer": "Drinkie Pinkie - Made with 💜",
         "description": "This bot allows for playing audio directly from YouTube.",
         "fields": {
-            "Commands": "`(!dpi |/)sounds queue join` - Have Drinkie join the VC, which will be determined based on which person triggered it, and which VC they were in. \n`(!dpi |/)sounds queue leave` - Have Drinkie leave the VC. \n`(!dpi |/)sounds queue add <url>` - Adds a YouTube video to the queue. \n`(!dpi |/)sounds queue remove <index>` - Removes video from queue based on index in queue. \n`(!dpi |/)sounds queue clear` - Clears all videos from the queue. \n`(!dpi |/)sounds queue list` - Lists all videos in queue. \n`(!dpi |/)sounds queue pause` - Pauses the current audio. \n`(!dpi |/)sounds queue next` - Plays next track in the queue. \n`(!dpi |/)sounds queue prev` - Plays previous track in the queue. \n`(!dpi |/)sounds addplaylist <playlistid>` - Adds all videos in a playlist (currently only adds 1st 100 videos).",
+            "Commands": {
+                "join": "`(!dpi |/)sounds queue join` - Have Drinkie join the VC, which will be determined based on which person triggered it, and which VC they were in.",
+                "leave:": "`(!dpi |/)sounds queue leave` - Have Drinkie leave the VC.",
+                "add": "`(!dpi |/)sounds queue add <url>` - Adds a YouTube video to the queue.",
+                "remove": "`(!dpi |/)sounds queue remove <index>` - Removes video from queue based on index in queue.",
+                "clear": "`(!dpi |/)sounds queue clear` - Clears all videos from the queue.",
+                "list": "`(!dpi |/)sounds queue list` - Lists all videos in queue.",
+                "pause": "`(!dpi |/)sounds queue pause` - Pauses the current audio.",
+                "next": "`(!dpi |/)sounds queue next` - Plays next track in the queue.",
+                "prev": "`(!dpi |/)sounds queue prev` - Plays previous track in the queue.",
+                "addplaylist": "`(!dpi |/)sounds addplaylist <playlistid>` - Adds all videos in a playlist (currently only adds 1st 100 videos)."
+            },
             "Optional Arguments": "Currently, the available extra arguments are `--notif=(yes/no)`, which will either not respond to normal commands, or send a private message if done through a slash command."
         }
     },
+    "mediafetch": {
+        "title": "Drinkie Pinkie's Mediafetcher Help",
+        "titlecommand": "Drinkie's Mediafetcher Commands",
+        "author": "Me, sily!",
+        "color": "f5b7d0",
+        "footer": "Drinkie Pinkie - Made with 💜",
+        "description": "This bot currently allows for YouTube channels to be checked every 5 minutes, and an update will be posted if a new video is uploaded, or removed.",
+        "fields": {
+            "Commands": {
+                "new": "`/mediafetch new <content_type> (youtube) <url>` - Adds a new mediafetch query.",
+                "list": "`/mediafetch list` - Lists all existing mediafetch queries in a server.",
+                "edit": "`/mediafetch edit <fetch_id> <url>` - Edit an existing mediafetch query.",
+                "remove": "`/mediafetch remove <fetch_id>` - Remove a mediafetch query."
+            }
+        }
+    },
+    "journal": {
+        "title": "Drinkie Pinkie's Journal Help (WIP)",
+        "titlecommand": "Drinkie's Journal Commands (WIP)",
+        "author": "Me, sily!",
+        "color": "f5b7d0",
+        "footer": "Drinkie Pinkie - Made with 💜",
+        "description": "Working in progress feature that allows someone to enter a journal entry. Stay tuned for this feature!",
+        "fields": {
+            "Commands": {
+                "journal": "`/journal <journal_name> <entry> <part> <chapter> [optional] <page> [optional] <journal_title> [optional]` - Current command essentially gives a bunch of formatting options for users to write in whatever their journal is about."
+            }
+        }
+    },
     "general": {
-        "title": "Drinkie Pinkie's Help!",
+        "title": "Drinkie Pinkie's General Help",
+        "titlecommand": "Drinkie's General Commands",
         "author": "Me, silly!",
         "color": "f5b7d0",
         "footer": "Drinkie Pinkie - Made with 💜",
         "description": "Here are the current things I do~",
         "fields": {
-            "Commands": "`(!dpi |/)img <tag1>,<tag2>, <tag3>` - Grabs a random image from Derpibooru with the tags you specify! \n`(!dpi |/)random <number>` - Random number is selected between 1 - 10, if your number equals the random number generated, you will learn another way to mention me, the drinkie. \n`(!dpi |/)game tictactoe <user>` - Play a game of tictactoe with a user you mention! \n`(!dpi |/)dailyponk <type> (day|bonus) <value> (date [yyyy-m-d] (ie. ISO-8601)|index|random)` - Using your value, will find the relevant daily ponk for that day! [Bonuses are on the following - 2019-10-11 (60), 2019-10-12 (61), 2019-10-28 (77), 2019-10-31 (80), 2019-11-2 (82), 2019-11-8 (88), 2019-11-9 (89), 2020-3-21 (222)] \n`(!dpi |/)source` - Check the source code for Drinkie! (plz don't roast too hard) \n`dpi predict <option/percentage/percentage-multiple> ''question/etc'' <a,b> (for option and percentage-multiple)` - Have a question? Let Drinkie predict it through a whole range of different scenarios.",
-            "Guides": "`(!dpi |/)help query` - Provides commands, along with information regarding controlling image queries that I search for! \n`(!dpi |/)help rotation` - Provides commands, along with information regarding timings for when images that I search are posted! \n`(!dpi |/)help prompts` - Provides some help, along with context for adding new prompts to be guessed. \n`(!dpi |/)help audio` - Guide for working the audio features.",
-            "Functions": "- Grabs the ##毎日ピンキーパイ from KurogeWaPony! \n- Customisable, guild-focused Derpibooru image posting scheduler (see help for query/rotation)! \n- Try mentioning me specifically, you may be surprised! \n- More to come??? (!!!)"
+            "Commands": {
+                "img": "`(!dpi |/)img <tag1>,<tag2>, <tag3>` - Grabs a random image from Derpibooru with the tags you specify!",
+                "random": "`(!dpi |/)random <number>` - Choose a random number between 1 and 10, and if it matches, you'll discover a new prompt.",
+                "game": "`(!dpi |/)game tictactoe <user>` - Play a game of tictactoe with a user you mention!",
+                "dailyponk": "`(!dpi |/)dailyponk <type> (day|bonus) <value> (date [yyyy-m-d] (ie. ISO-8601)|index|random)` - Using your value, you will find the relevant daily ponk for that day!",
+                "source": "`(!dpi |/)source` - Check the source code for Drinkie!",
+                "predict": "`/predict <option/percentage/percentage-multiple> ''question/etc'' <a,b> (for option and percentage-multiple)` - Have a question? Let Drinkie predict it through a whole range of different scenarios.",
+                "reminder": "`/reminder <server_specific> (yes|no) <reminder_text> <schedule> (date or cron) <reminder_to> [optional] <reminder_from> [optional]` - Basic command to create reminders with a variety of options."
+            },
+            "Guides": {
+                "query": "`(!dpi |/)help query` - Provides commands, along with information regarding controlling image queries that I search for!",
+                "rotation": "`(!dpi |/)help rotation` - Provides commands, along with information regarding timings for when images that I search are posted!",
+                "prompts": "`(!dpi |/)help prompts` - Provides some help, along with context for adding new prompts to be guessed.",
+                "audio": "`(!dpi |/)help audio` - Guide for working the audio features.",
+                "mediafetch": "`(!dpi |/)help mediafetch` - Information about the mediafetch feature.",
+                "journal": "`(!dpi |/)help journal` - Provides information for upcoming journal feature."
+            },
+            "Functions": {
+                "1": "- Used to grab the #毎日ピンキーパイ from KurogeWaPony, now can retrieve any of them posted!",
+                "2": "- Customisable, guild-focused Derpibooru image posting scheduler (see help for query/rotation)!",
+                "3": "- Try mentioning me specifically, you may be surprised!",
+                "4": "- More to come??? (!!!)"
+            }
         }
     }
-}
-}
+}}

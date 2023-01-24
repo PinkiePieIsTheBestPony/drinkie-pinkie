@@ -20,10 +20,17 @@ const commands = [
         .addStringOption(option => 
             option.setName('help_choice')
                 .setDescription('Specific help option')
+                .addChoice('Help', 'general')
                 .addChoice('Query', 'query')
                 .addChoice('Rotation', 'rotation')
                 .addChoice('Prompts', 'prompts')
-                .addChoice('Audio', 'audio')),
+                .addChoice('Audio', 'audio')
+                .addChoice('Mediafetch', 'mediafetch')
+                .addChoice('Journal', 'journal')
+                .addChoice('Command', 'command'))
+        .addStringOption(option => 
+            option.setName('help_command')
+                .setDescription('Specific command')),
     new SlashCommandBuilder()
         .setName('random')
         .setDescription('Will tell you one of my commands if your number matches wuth my generated one')
