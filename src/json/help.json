@@ -127,13 +127,21 @@
         "description": "Here are the current things I do~",
         "fields": {
             "Commands": {
+                "help": "`(!dpi |/help <section> (optional) <command> (optional)` - General information and help about this bot.",
                 "img": "`(!dpi |/)img <tag1>,<tag2>, <tag3>` - Grabs a random image from Derpibooru with the tags you specify!",
                 "random": "`(!dpi |/)random <number>` - Choose a random number between 1 and 10, and if it matches, you'll discover a new prompt.",
                 "game": "`(!dpi |/)game tictactoe <user>` - Play a game of tictactoe with a user you mention!",
-                "dailyponk": "`(!dpi |/)dailyponk <type> (day|bonus) <value> (date [yyyy-m-d] (ie. ISO-8601)|index|random)` - Using your value, you will find the relevant daily ponk for that day!",
-                "source": "`(!dpi |/)source` - Check the source code for Drinkie!",
+                "dailyponk": "`(!dpi |/)dailyponk <type> (day|bonus) <value> (date [yyyy-m-d] (ie. ISO-8601)|index|random)` - Grabs the daily ponk for your selected value.",
+                "source": "`(!dpi |/)source` - Drinkie's source code!",
                 "predict": "`/predict <option/percentage/percentage-multiple> ''question/etc'' <a,b> (for option and percentage-multiple)` - Have a question? Let Drinkie predict it through a whole range of different scenarios.",
                 "reminder": "`/reminder <server_specific> (yes|no) <reminder_text> <schedule> (date or cron) <reminder_to> [optional] <reminder_from> [optional]` - Basic command to create reminders with a variety of options."
+            },
+            "Bonus Info": {
+                "help": "Section currently has 8 choosable options!",
+                "dailyponk": "Bonuses are on the following days - 2019-10-11 (60), 2019-10-12 (61), 2019-10-28 (77), 2019-10-31 (80), 2019-11-2 (82), 2019-11-8 (88), 2019-11-9 (89) and 2020-3-21 (222)",
+                "source": "Please don't roast me too hard for this code! Also, since you either wanted to know more detail on this simple source command (or you'll looking at the JSON file this is in) - here's a bonus for you: https://derpicdn.net/img/view/2018/2/22/1662708.png",
+                "predict": "Hope you are having a nice day! :)",
+                "reminder": "At the moment, this reminder can be set globally to all servers this bot is on. This means if you put you opt in to show who wrote this reminder, or directed the reminder to a specific person - everyone can see!"
             },
             "Guides": {
                 "query": "`(!dpi |/)help query` - Provides commands, along with information regarding controlling image queries that I search for!",

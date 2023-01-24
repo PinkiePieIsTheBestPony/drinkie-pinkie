@@ -18,13 +18,19 @@ function generalEmbed(generalData, fieldName, fieldInfo) {
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: generalData["footer"]})
 }
 
-function commandEmbed(generalData, command, commandName) {
-    return new MessageEmbed()
+function commandEmbed(generalData, command, bonusInfo, commandName) {
+    const embed = new MessageEmbed()
         .setTitle(generalData["titlecommand"])
         .setColor(generalData["color"])
         .setDescription(generalData["description"])
         .addFields({name: "Command: `" + commandName + "`", value: command})
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: generalData["footer"]});
+
+    if (bonusInfo !== null) { 
+        embed.addFields({name: "Bonus Info", value: bonusInfo})
+    }
+        
+    return embed;
 }
 
 function setupCommand(msg, generalData, allGeneralCommands, source) {
@@ -32,11 +38,12 @@ function setupCommand(msg, generalData, allGeneralCommands, source) {
         let typedCommand = msg.replace(source + ' ', '');
         let filteredCommands = Object.keys(allGeneralCommands).filter(command => command === typedCommand)
         if (filteredCommands.length > 0) {
-            return [commandEmbed(generalData, allGeneralCommands[typedCommand], filteredCommands), null, null, source];
+            let bonusInfo = generalData["fields"]["Bonus Info"][filteredCommands];
+            return [commandEmbed(generalData, allGeneralCommands[typedCommand], bonusInfo, filteredCommands), null, null, source];
         } else if (source === "general") {
             filteredCommands = Object.keys(generalData["fields"]["Guides"]).filter(command => command === typedCommand);
             if (filteredCommands.length > 0) {
-                return [commandEmbed(generalData, generalData["fields"]["Guides"][typedCommand], filteredCommands), null, null, source];
+                return [commandEmbed(generalData, generalData["fields"]["Guides"][typedCommand], null, filteredCommands), null, null, source];
             }
         } else if (typedCommand !== "") {
             let replyToMsg = "Invalid command to search! `" + typedCommand + "` does not exist within `" + source + "`";
@@ -84,11 +91,11 @@ export const createEmbeddedHelp = (msg) => {
 					.setStyle('PRIMARY'),
                 new MessageButton()
                     .setCustomId('button2')
-                    .setLabel(Object.keys(generalData["fields"])[1])
+                    .setLabel(Object.keys(generalData["fields"])[2])
                     .setStyle('PRIMARY'),
                 new MessageButton()
                     .setCustomId('button3')
-                    .setLabel(Object.keys(generalData["fields"])[2])
+                    .setLabel(Object.keys(generalData["fields"])[3])
                     .setStyle('PRIMARY'),
 			);
          
@@ -225,7 +232,7 @@ export const createEmbeddedHelp = (msg) => {
         }
         return [new MessageEmbed()
         .setTitle("All Current Commands")
-        .setColor('f5b7do')
+        .setColor('f5b7d0')
         .setDescription("Here is every current relevant command:")
         .addFields({name: "Guide Commands", value: allData[0].join('\n')})
         .addFields({name: "Query Commands", value: allData[1].join('\n')})
@@ -236,6 +243,9 @@ export const createEmbeddedHelp = (msg) => {
         .addFields({name: "Journal Commands", value: allData[6].join('\n')})
         .addFields({name: "General Commands", value: allData[7].join('\n')})
         .setFooter({iconURL: 'https://cdn.discordapp.com/avatars/721412130661728288/cdeaff2b9089ef86e06b0788bb9f913d.webp?size=80', text: "Drinkie Pinkie - Made with 💜"}), null, null, "command"];
+    } else {
+        let replyToMsg = "Command not found!";
+        return [null, replyToMsg, null, null];
     }
 }
 
