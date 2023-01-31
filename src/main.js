@@ -162,6 +162,17 @@ async function checkForLatest(client) {
     }
 }
 
+async function checkImageSize(twitterbotDetails) {
+    let imageReturned = await getDerpibooruImage(twitterbotDetails.twitter_query, twitterbotDetails.twitter_filter, null);
+    if (imageReturned !== undefined) {
+        if (imageReturned.size >= 5242880) {
+            checkImageSize(twitterbotDetails);
+        } else {
+            await checkImageInfo(imageReturned, twitterbotDetails.twitter_account_id);
+        }
+    }
+}
+
 async function postImageToTwitter() {
     let twitterbotsIdArray = await selectAllStatementDB("twitterbot_id", "p_twitterbot", null, null, null);
     if (twitterbotsIdArray !== "") {
@@ -169,10 +180,7 @@ async function postImageToTwitter() {
             let twitterbotDetails = await selectAllStatementDB("twitter_account_id, twitter_query, twitter_rotation, twitter_filter", "p_twitterbot", ["twitterbot_id"], "=", [twitterbotsIdArray[i].twitterbot_id]);
             if (cronChecker(twitterbotDetails[0].twitter_rotation)) {
                 try {
-                    let imageReturned = await getDerpibooruImage(twitterbotDetails[0].twitter_query, twitterbotDetails[0].twitter_filter, null);
-                    if (imageReturned !== undefined) {
-                        await checkImageInfo(imageReturned, twitterbotDetails[0].twitter_account_id);
-                    }
+                    checkImageSize(twitterbotDetails[0])
                 } catch (error) {
                     console.log(error);
                 }
