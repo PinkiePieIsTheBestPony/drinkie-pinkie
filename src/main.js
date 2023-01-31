@@ -1,5 +1,6 @@
 import {initialiseDiscordJS} from './external-libs/discord.js';
 import {getDerpibooruImage} from './external-libs/derpi.js';
+import {checkImageInfo} from './external-libs/twitter.js';
 import {initialiseDB} from './db/initDB.js';
 import {selectAllStatementDB, insertGuildDetails, removeStatementDB, updateStatementDB} from './db/dbQuery.js';
 import {cronChecker} from './cron.js';
@@ -161,6 +162,25 @@ async function checkForLatest(client) {
     }
 }
 
+async function postImageToTwitter() {
+    let twitterbotsIdArray = await selectAllStatementDB("twitterbot_id", "p_twitterbot", null, null, null);
+    if (twitterbotsIdArray !== "") {
+        for (let i = 0; i < twitterbotsIdArray.length; i++) {
+            let twitterbotDetails = await selectAllStatementDB("twitter_account_id, twitter_query, twitter_rotation, twitter_filter", "p_twitterbot", ["twitterbot_id"], "=", [twitterbotsIdArray[i].twitterbot_id]);
+            if (cronChecker(twitterbotDetails[0].twitter_rotation)) {
+                try {
+                    let imageReturned = await getDerpibooruImage(twitterbotDetails[0].twitter_query, twitterbotDetails[0].twitter_filter, null);
+                    if (imageReturned !== undefined) {
+                        await checkImageInfo(imageReturned, twitterbotDetails[0].twitter_account_id);
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
+    }
+}
+
 async function broadcastChange(guild, fileStream) {
     let toggleSetting = await selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
     let validBroadcast = await selectAllStatementDB("broadcast_valid", "p_broadcasts", ["server_id"], "=", [guild.id]);
@@ -197,6 +217,7 @@ client.on('ready', async () => {
             if (numberOfIterations < 1) {
                 autoPostLoop(client);
                 reminderChecker();
+                postImageToTwitter();
                 numberOfIterations++;
             }
         },

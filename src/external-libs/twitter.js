@@ -23,6 +23,91 @@ function extractTwitId(msg, link) {
     }
 }
 
+function getArtists(tagsArray) {
+    const tags = tagsArray.toString();
+    if (tags.includes("artist:")) {
+        const numOfArtists = tags.match(new RegExp("artist:", "g") || []).length;
+        const pattern = /artist:./;
+        const arrOfTags = tags.split(",");
+        let tagsStripped = [];
+        let a = 0;
+        for (let i = 0; i < arrOfTags.length; i++) {
+            if (numOfArtists == a) {
+                const artistsString = tagsStripped.join(", ");
+                return artistsString;
+            }
+            let tag = arrOfTags[i].trim();
+            if (pattern.test(tag)) {
+                let tagStripped = tag.substring(7);
+                if (numOfArtists > 1) {
+                    tagsStripped[a] = tagStripped;
+                    a++;
+                } else {
+                    return tagStripped;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function createStatus(id, artists, sauce) {
+    let artistText = '';
+    let sauceText = '';
+    const url = "Derpi link: https://derpibooru.org/" + id;
+    if (artists != null) {
+        if (artists.includes(',')) {
+            artistText = "Artists: " + artists + " | ";
+        }
+        else {
+            artistText = "Artist: " + artists + " | ";
+        }
+    }
+    if (sauce != null) {
+        if (sauce.includes("http")) {
+            sauceText = "Source: " + sauce + " | ";
+        }
+    }
+    return artistText + sauceText + url;
+}
+
+function checkSource(res, sauce, twitterAccount) {
+    if (sauce.includes("https://twitter.com")) {
+        if (res.ok) {
+            const twitterPattern = /status\/([0-9]+)/
+            const matchedTwitterPattern = twitterPattern.exec(sauce)
+            retweetImage(matchedTwitterPattern[1], twitterAccount);
+            return false;
+        }
+    }
+    return true;
+}
+
+async function retweetImage(twitterID, twitterAccount) {
+    //const T = initialiseTwit(twitterAccount);
+    const tweetClient = getTwitClient();
+    await tweetClient.v2.unretweet(twitterAccount, twitterID);
+    await tweetClient.v2.retweet(twitterAccount, twitterID);
+}
+
+function twitterPost(image) {
+    const artists = getArtists(image.tags.toString());
+    const status = createStatus(image.id, artists, image.sourceUrl);
+    fetchImage(image.viewUrl, status, image.mimeType);
+}
+
+async function fetchImage(urlDirect, status, fileType) {
+    const resp = await fetch(urlDirect);
+    const buffer = await resp.arrayBuffer();
+    postTweetWithImage(buffer, status, fileType);
+}
+
+async function postTweetWithImage(image, status, fileType) {
+    const tweetClient = getTwitClient();
+    const mediaId = await tweetClient.v1.uploadMedia(Buffer.from(image), {mimeType: fileType});
+    await tweetClient.v1.tweet(status, {media_ids: mediaId});
+}
+
 async function validateLink(msg, twitLink) {
     try {
         let repsonse = await fetch(twitLink);
@@ -31,6 +116,18 @@ async function validateLink(msg, twitLink) {
         console.error(error);
         msg.type.reply("Error trying to validate and embed tweet.");
         return null;
+    }
+}
+
+export async function checkImageInfo(image, twitterAccount) {
+    if (image.sourceUrl == null || image.sourceUrl == '') {
+        twitterPost(image);
+    } else {
+        const resp = await fetch(image.sourceUrl);
+        const notRetweetable = checkSource(resp, image.sourceUrl, twitterAccount);
+        if (notRetweetable) {
+            twitterPost(image);
+        }
     }
 }
 
