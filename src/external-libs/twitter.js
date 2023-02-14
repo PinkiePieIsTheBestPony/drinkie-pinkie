@@ -71,13 +71,17 @@ function createStatus(id, artists, sauce) {
     return artistText + sauceText + url;
 }
 
-function checkSource(res, sauce, twitterAccount) {
-    if (sauce.includes("https://twitter.com")) {
+async function checkSource(res, sauce, twitterAccount) {
+    if (sauce.includes("twitter.com")) {
         if (res.ok) {
-            const twitterPattern = /status\/([0-9]+)/
-            const matchedTwitterPattern = twitterPattern.exec(sauce)
-            retweetImage(matchedTwitterPattern[1], twitterAccount);
-            return false;
+            const tweetClient = getTwitClient();
+            let regx = /(https:\/\/)?(www\.)?twitter\.com\/.*\/([0-9]+)\/?/
+            let info = regx.exec(sauce);
+            let singleTweet = await tweetClient.v2.singleTweet(info[3]);
+            if (singleTweet.hasOwnProperty('errors')) {
+                retweetImage(info[3], twitterAccount);
+                return false;
+            }
         }
     }
     return true;
@@ -85,7 +89,6 @@ function checkSource(res, sauce, twitterAccount) {
 
 async function retweetImage(twitterID, twitterAccount) {
     //const T = initialiseTwit(twitterAccount);
-    const tweetClient = getTwitClient();
     await tweetClient.v2.unretweet(twitterAccount, twitterID);
     await tweetClient.v2.retweet(twitterAccount, twitterID);
 }
@@ -123,7 +126,7 @@ export async function checkImageInfo(image, twitterAccount) {
     if (image.sourceUrl == null || image.sourceUrl == '') {
         twitterPost(image);
     } else {
-        const resp = await fetch(image.sourceUrl);
+        const resp = await fetch(image);
         const notRetweetable = checkSource(resp, image.sourceUrl, twitterAccount);
         if (notRetweetable) {
             twitterPost(image);
