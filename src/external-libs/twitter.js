@@ -79,7 +79,7 @@ async function checkSource(res, sauce, twitterAccount) {
             let info = regx.exec(sauce);
             let singleTweet = await tweetClient.v2.singleTweet(info[3]);
             if (singleTweet.hasOwnProperty('errors')) {
-                retweetImage(info[3], twitterAccount);
+                retweetImage(info[3], twitterAccount, tweetClient);
                 return false;
             }
         }
@@ -87,7 +87,7 @@ async function checkSource(res, sauce, twitterAccount) {
     return true;
 }
 
-async function retweetImage(twitterID, twitterAccount) {
+async function retweetImage(twitterID, twitterAccount, tweetClient) {
     //const T = initialiseTwit(twitterAccount);
     await tweetClient.v2.unretweet(twitterAccount, twitterID);
     await tweetClient.v2.retweet(twitterAccount, twitterID);
