@@ -126,7 +126,7 @@ export async function checkImageInfo(image, twitterAccount) {
     if (image.sourceUrl == null || image.sourceUrl == '') {
         twitterPost(image);
     } else {
-        const resp = await fetch(image);
+        const resp = await fetch(image.sourceUrl);
         const notRetweetable = checkSource(resp, image.sourceUrl, twitterAccount);
         if (notRetweetable) {
             twitterPost(image);
