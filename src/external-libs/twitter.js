@@ -78,7 +78,7 @@ async function checkSource(res, sauce, twitterAccount) {
             let regx = /(https:\/\/)?(www\.)?twitter\.com\/.*\/([0-9]+)\/?/
             let info = regx.exec(sauce);
             let singleTweet = await tweetClient.v2.singleTweet(info[3]);
-            if (singleTweet.hasOwnProperty('errors')) {
+            if (!singleTweet.hasOwnProperty('errors')) {
                 retweetImage(info[3], twitterAccount, tweetClient);
                 return false;
             }
