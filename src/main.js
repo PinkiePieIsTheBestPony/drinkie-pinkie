@@ -88,12 +88,6 @@ async function checkForLatest(client) {
     let fetcherIDsArray = await selectAllStatementDB("fetcher_id", "p_fetcher", null, null, null);
     if (fetcherIDsArray !== "") {
         for (let i = 0; i < fetcherIDsArray.length; i++) {
-            /*let checkFrom = await selectAllStatementDB("content", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
-            let serverID = await selectAllStatementDB("server_id", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
-            let channelLink = await selectAllStatementDB("channel_link", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
-            let latestVideo = await selectAllStatementDB("latest_video", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
-            let latestVtime = await selectAllStatementDB("latest_vtime", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);
-            let channelName = await selectAllStatementDB("channel_name", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray.fetcher_id]);*/
             let videoDetails = await selectAllStatementDB("content, server_id, channel_link, latest_video, latest_vtime, channel_name", "p_fetcher", ["fetcher_id"], "=", [fetcherIDsArray[i].fetcher_id]);
             let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [videoDetails[0].server_id]);
             const link = "https://www.googleapis.com/youtube/v3/";

@@ -77,10 +77,12 @@ async function checkSource(res, sauce, twitterAccount) {
             const tweetClient = getTwitClient();
             let regx = /(https:\/\/)?(www\.)?twitter\.com\/.*\/([0-9]+)\/?/
             let info = regx.exec(sauce);
-            let singleTweet = await tweetClient.v2.singleTweet(info[3]);
-            if (!singleTweet.hasOwnProperty('errors')) {
-                await retweetImage(info[3], twitterAccount, tweetClient);
-                return false;
+            if (info[3] !== null) {
+                let singleTweet = await tweetClient.v2.singleTweet(info[3]);
+                if (!singleTweet.hasOwnProperty('errors')) {
+                    await retweetImage(info[3], twitterAccount, tweetClient);
+                    return false;
+                }
             }
         }
     }
@@ -99,6 +101,18 @@ function twitterPost(image) {
     fetchImage(image.viewUrl, status, image.mimeType);
 }
 
+function twitterErrorCodes(err, image, status, fileType) {
+    switch (err.data.errors[code]) {
+        case "134": {
+            postTweetWithImage(image, status, fileType);
+        }
+        case "429": {
+            status = status.replace(/Source: .*|/, '');
+            postTweetWithImage(image, status, fileType);
+        }
+    }
+}
+
 async function fetchImage(urlDirect, status, fileType) {
     const resp = await fetch(urlDirect);
     const buffer = await resp.arrayBuffer();
@@ -108,7 +122,12 @@ async function fetchImage(urlDirect, status, fileType) {
 async function postTweetWithImage(image, status, fileType) {
     const tweetClient = getTwitClient();
     const mediaId = await tweetClient.v1.uploadMedia(Buffer.from(image), {mimeType: fileType});
-    await tweetClient.v1.tweet(status, {media_ids: mediaId});
+    await tweetClient.v1.tweet(status, {media_ids: mediaId})
+    .catch(err => 
+        function() {
+            console.error(err);
+            twitterErrorCodes(err, image, status, fileType);
+        });
 }
 
 async function validateLink(msg, twitLink) {
@@ -126,11 +145,18 @@ export async function checkImageInfo(image, twitterAccount) {
     if (image.sourceUrl == null || image.sourceUrl == '') {
         twitterPost(image);
     } else {
-        const resp = await fetch(image.sourceUrl);
-        const notRetweetable = await checkSource(resp, image.sourceUrl, twitterAccount);
-        if (notRetweetable) {
-            twitterPost(image);
-        }
+        await fetch(image.sourceUrl)
+            .then(resp =>
+                async function () {
+                    if (await checkSource(resp, image.sourceUrl, twitterAccount)) {
+                        twitterPost(image);
+                    }
+                })
+            .catch(err =>
+                function () {
+                    console.error(err);
+                    twitterPost(image)
+                });
     }
 }
 

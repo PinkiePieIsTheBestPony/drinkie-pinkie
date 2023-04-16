@@ -104,8 +104,9 @@ export const getDerpibooruImage = async (message, filter, isNSFW) => {
     
     const searchImg = new SearchImages({url: "https://derpibooru.org", linkOptions: {key: derpi_key}});
     searchImg.query(tagList).random().limit(1);
-    let resp = await searchImg.exec({filter: filter})
-    return resp.images[0];
+    return await searchImg.exec({filter: filter})
+        .then(resp => resp.images[0])
+        .catch(err => console.error(err))
 }
 
 export const getDerpibooruImageID = (id) => {
