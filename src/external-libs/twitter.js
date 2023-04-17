@@ -123,8 +123,7 @@ async function postTweetWithImage(image, status, fileType) {
     const tweetClient = getTwitClient();
     const mediaId = await tweetClient.v1.uploadMedia(Buffer.from(image), {mimeType: fileType});
     await tweetClient.v1.tweet(status, {media_ids: mediaId})
-    .catch(err => 
-        function() {
+    .catch(function(err) {
             console.error(err);
             twitterErrorCodes(err, image, status, fileType);
         });
@@ -146,14 +145,12 @@ export async function checkImageInfo(image, twitterAccount) {
         twitterPost(image);
     } else {
         await fetch(image.sourceUrl)
-            .then(resp =>
-                async function () {
+            .then(async function (resp) {
                     if (await checkSource(resp, image.sourceUrl, twitterAccount)) {
                         twitterPost(image);
                     }
                 })
-            .catch(err =>
-                function () {
+            .catch(function (err) {
                     console.error(err);
                     twitterPost(image)
                 });
