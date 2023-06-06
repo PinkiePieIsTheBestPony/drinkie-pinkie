@@ -71,18 +71,15 @@ function createStatus(id, artists, sauce) {
     return artistText + sauceText + url;
 }
 
-async function checkSource(res, sauce, twitterAccount) {
+async function checkSource(sauce, twitterAccount) {
     if (sauce.includes("twitter.com")) {
-        if (res.ok) {
-            const tweetClient = getTwitClient();
-            let regx = /(https:\/\/)?(www\.)?twitter\.com\/.*\/([0-9]+)\/?/
-            let info = regx.exec(sauce);
-            if (info[3] !== null) {
-                let singleTweet = await tweetClient.v2.singleTweet(info[3]);
-                if (!singleTweet.hasOwnProperty('errors')) {
-                    await retweetImage(info[3], twitterAccount, tweetClient);
-                    return false;
-                }
+        const tweetClient = getTwitClient();
+        let regx = /(https:\/\/)?(www\.)?twitter\.com\/.*\/([0-9]+)\/?/
+        let info = regx.exec(sauce);
+        if (info[3] !== null) {
+            let singleTweet = await tweetClient.v2.singleTweet(info[3]);
+            if (!singleTweet.hasOwnProperty('errors')) {
+                return await retweetImage(info[3], twitterAccount, tweetClient);
             }
         }
     }
@@ -148,7 +145,7 @@ export async function checkImageInfo(image, twitterAccount) {
     if (image.sourceUrl == null || image.sourceUrl == '') {
         twitterPost(image);
     } else {
-        if (await checkSource(resp, image.sourceUrl, twitterAccount)) {
+        if (await checkSource(image.sourceUrl, twitterAccount)) {
             twitterPost(image);
         }
         else {
