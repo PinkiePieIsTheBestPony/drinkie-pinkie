@@ -90,9 +90,13 @@ async function checkSource(res, sauce, twitterAccount) {
 }
 
 async function retweetImage(twitterID, twitterAccount, tweetClient) {
-    //const T = initialiseTwit(twitterAccount);
-    await tweetClient.v2.unretweet(twitterAccount, twitterID);
-    await tweetClient.v2.retweet(twitterAccount, twitterID);
+    try {
+        await tweetClient.v2.unretweet(twitterAccount, twitterID);
+        await tweetClient.v2.retweet(twitterAccount, twitterID);
+        return false;
+    } catch(error) {
+        return true;
+    }
 }
 
 function twitterPost(image) {
@@ -144,16 +148,12 @@ export async function checkImageInfo(image, twitterAccount) {
     if (image.sourceUrl == null || image.sourceUrl == '') {
         twitterPost(image);
     } else {
-        await fetch(image.sourceUrl)
-            .then(async function (resp) {
-                    if (await checkSource(resp, image.sourceUrl, twitterAccount)) {
-                        twitterPost(image);
-                    }
-                })
-            .catch(function (err) {
-                    console.error(err);
-                    twitterPost(image)
-                });
+        if (await checkSource(resp, image.sourceUrl, twitterAccount)) {
+            twitterPost(image);
+        }
+        else {
+            twitterPost(image)
+        }
     }
 }
 
