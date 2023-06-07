@@ -148,9 +148,6 @@ export async function checkImageInfo(image, twitterAccount) {
         if (await checkSource(image.sourceUrl, twitterAccount)) {
             twitterPost(image);
         }
-        else {
-            twitterPost(image)
-        }
     }
 }
 
