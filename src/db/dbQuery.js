@@ -149,8 +149,8 @@ export async function insertGuildDetails(guild) {
     if (broadcastInfo !== guild.id) {
         await insertStatementDB("p_broadcasts(server_id, broadcast_toggle, broadcast_valid)", guild.id, '0', '0');
     }
-    let twitterbotInfo = await selectAllStatementDB("twitter_account_id", "p_twitterbot", ["twitter_account_id"], "=", ['1010139676714283008']);
-    if (twitterbotInfo !== "1010139676714283008") {
-        await insertStatementDB("p_twitterbot(twitter_account_id, twitter_query, twitter_rotation, twitter_filter)", "1010139676714283008", "pinkie pie, safe, solo, !webm, score.gte:50, !irl human", "0/30 * * * *", "167482");
-    }
+    //let twitterbotInfo = await selectAllStatementDB("twitter_account_id", "p_twitterbot", ["twitter_account_id"], "=", ['1010139676714283008']);
+    //if (twitterbotInfo !== "1010139676714283008") {
+    //    await insertStatementDB("p_twitterbot(twitter_account_id, twitter_query, twitter_rotation, twitter_filter)", "1010139676714283008", "pinkie pie, safe, solo, !webm, score.gte:50, !irl human", "0/30 * * * *", "167482");
+    //}
 }

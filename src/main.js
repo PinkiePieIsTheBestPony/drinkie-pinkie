@@ -66,7 +66,7 @@ async function reminderChecker() {
             let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [fetchReminders[i].server_id]);
             if (cronChecker(fetchReminders[i].schedule)) {
                 let text = `${reminderTo ? "Hey " + reminderTo + ", " : ""}${reminderText}${reminderFrom ? ", from " + reminderFrom + "." : ""}`;
-                if (fetchReminders[i].server_reminder == 'true') {
+                if (fetchReminders[i].server_reminder) {
                     client.guilds.cache.get(fetchReminders[i].server_id).channels.cache.find(channel => channel.id === defaultChannel).send(text);
                 } else {
                     [...client.guilds.cache.values()].forEach(async guild => {
