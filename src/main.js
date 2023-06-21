@@ -47,7 +47,7 @@ async function reminderChecker() {
     let fetchReminders = await selectAllStatementDB("reminder_id, server_id, server_reminder, schedule, reminder_from, reminder_to", "p_reminder", null, null, null);
     if (fetchReminders !== "") {
         for (let i = 0; i < fetchReminders.length; i++) {
-            let reminderText = await selectAllStatementDB("reminder_text", "p_reminder", ["reminder_id"], "=", [reminderArray[0]])
+            let reminderText = await selectAllStatementDB("reminder_text", "p_reminder", ["reminder_id"], "=", [fetchReminders[i].reminder_id])
             let reminderFrom;
             let reminderTo;
 
