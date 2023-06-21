@@ -64,18 +64,20 @@ async function reminderChecker() {
             }
 
             let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [fetchReminders[i].server_id]);
-            if (cronChecker(fetchReminders[i].schedule)) {
-                let text = `${reminderTo ? "Hey " + reminderTo + ", " : ""}${reminderText}${reminderFrom ? ", from " + reminderFrom + "." : ""}`;
-                if (fetchReminders[i].server_reminder) {
-                    client.guilds.cache.get(fetchReminders[i].server_id).channels.cache.find(channel => channel.id === defaultChannel).send(text);
-                } else {
-                    [...client.guilds.cache.values()].forEach(async guild => {
-                        let toggleSetting = await selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
-                        let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
-                        if (toggleSetting == 1) {
-                            guild.channels.cache.get(defaultChannel.replace('<#', '').replace('>', '')).send(text);
-                        }
-                    });
+            if (defaultChannel !== "noChannelFoundForDrinkie") {
+                if (cronChecker(fetchReminders[i].schedule)) {
+                    let text = `${reminderTo ? "Hey " + reminderTo + ", " : ""}${reminderText}${reminderFrom ? ", from " + reminderFrom + "." : ""}`;
+                    if (fetchReminders[i].server_reminder) {
+                        client.guilds.cache.get(fetchReminders[i].server_id).channels.cache.find(channel => channel.id === defaultChannel).send(text);
+                    } else {
+                        [...client.guilds.cache.values()].forEach(async guild => {
+                            let toggleSetting = await selectAllStatementDB("broadcast_toggle", "p_broadcasts", ["server_id"], "=", [guild.id]);
+                            let defaultChannel = await selectAllStatementDB("default_channel", "p_server", ["server_id"], "=", [guild.id]);
+                            if (toggleSetting == 1) {
+                                guild.channels.cache.get(defaultChannel.replace('<#', '').replace('>', '')).send(text);
+                            }
+                        });
+                    }
                 }
             }
         }
