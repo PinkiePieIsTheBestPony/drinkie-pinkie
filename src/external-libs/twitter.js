@@ -123,7 +123,7 @@ async function fetchImage(urlDirect, status, fileType) {
 async function postTweetWithImage(image, status, fileType) {
     const tweetClient = getTwitClient();
     const mediaId = await tweetClient.v1.uploadMedia(Buffer.from(image), {mimeType: fileType});
-    await tweetClient.v1.tweet(status, {media_ids: mediaId})
+    await tweetClient.v2.tweet(status, {media_ids: mediaId})
     .catch(function(err) {
             console.error(err);
             twitterErrorCodes(err, image, status, fileType);
@@ -163,7 +163,7 @@ export async function getLink(msg, twitLink) {
     let arrayOfImages = [];
     try {
         const twitClient = getTwitClient();
-        const tweet = await twitClient.v1.singleTweet(twitId);
+        const tweet = await twitClient.v2.singleTweet(twitId);
         if (tweet.extended_entities !== undefined) {
             const isVideo = (tweet.extended_entities.media[0].type === "animated_gif" || tweet.extended_entities.media[0].type === "video")
             for (let i = 0; i < tweet.extended_entities.media.length; i++) {
