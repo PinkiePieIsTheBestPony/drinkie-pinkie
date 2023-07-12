@@ -123,7 +123,7 @@ async function fetchImage(urlDirect, status, fileType) {
 async function postTweetWithImage(image, status, fileType) {
     const tweetClient = getTwitClient();
     const mediaId = await tweetClient.v1.uploadMedia(Buffer.from(image), {mimeType: fileType});
-    await tweetClient.v2.tweet(status, {media_ids: mediaId})
+    await tweetClient.v2.tweet(status, {media: {media_ids: [mediaId]}})
     .catch(function(err) {
             console.error(err);
             twitterErrorCodes(err, image, status, fileType);
