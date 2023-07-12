@@ -13,3 +13,4 @@ export const access_token = process.env.access_token;
 export const access_token_secret = process.env.access_token_secret;
 export const app_key = process.env.consumer_key;
 export const app_key_secret = process.env.consumer_secret;
+export const bearer_token = process.env.bearer_token;

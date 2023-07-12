@@ -522,8 +522,9 @@ async function botBroadcastChange(msg) {
 }
 
 function botTwitEmbed(msg) {
-    let twitLink = msg.content.split(" ")[0];
-    getLink(msg, twitLink)
+    //let twitLink = msg.content.split(" ")[0];
+    //getLink(msg, twitLink)
+    msg.type.reply("This feature has been deprecated because Elon Musk is a cunt.")
 }
 
 async function botMediaFetch(msg) {

@@ -1,15 +1,15 @@
 import {TwitterApi} from "twitter-api-v2";
 import fetch from "node-fetch";
-import {app_key, app_key_secret, access_token, access_token_secret} from "../config.js";
+import {app_key, app_key_secret, access_token, access_token_secret, bearer_token} from "../config.js";
 import {createEmbeddedTweet} from "./discord.js";
 
-function getTwitClient() {
+async function getTwitClient() {
     return new TwitterApi({
         appKey: app_key,
         appSecret: app_key_secret,
         accessToken: access_token,
-        accessSecret: access_token_secret,
-      });
+        accessSecret: access_token_secret
+    });
 }
 
 function extractTwitId(msg, link) {
@@ -73,7 +73,7 @@ function createStatus(id, artists, sauce) {
 
 async function checkSource(sauce, twitterAccount) {
     if (sauce.includes("twitter.com")) {
-        const tweetClient = getTwitClient();
+        const tweetClient = await getTwitClient();
         let regx = /(https:\/\/)?(www\.)?twitter\.com\/.*\/([0-9]+)\/?/
         let info = regx.exec(sauce);
         if (info[3] !== null) {
@@ -121,7 +121,7 @@ async function fetchImage(urlDirect, status, fileType) {
 }
 
 async function postTweetWithImage(image, status, fileType) {
-    const tweetClient = getTwitClient();
+    const tweetClient = await getTwitClient();
     const mediaId = await tweetClient.v1.uploadMedia(Buffer.from(image), {mimeType: fileType});
     await tweetClient.v2.tweet(status, {media: {media_ids: [mediaId]}})
     .catch(function(err) {
@@ -142,13 +142,7 @@ async function validateLink(msg, twitLink) {
 }
 
 export async function checkImageInfo(image, twitterAccount) {
-    if (image.sourceUrl == null || image.sourceUrl == '') {
-        twitterPost(image);
-    } else {
-        if (await checkSource(image.sourceUrl, twitterAccount)) {
-            twitterPost(image);
-        }
-    }
+    twitterPost(image);
 }
 
 export async function getLink(msg, twitLink) {
@@ -162,7 +156,7 @@ export async function getLink(msg, twitLink) {
     }
     let arrayOfImages = [];
     try {
-        const twitClient = getTwitClient();
+        const twitClient = await getTwitClient();
         const tweet = await twitClient.v2.singleTweet(twitId);
         if (tweet.extended_entities !== undefined) {
             const isVideo = (tweet.extended_entities.media[0].type === "animated_gif" || tweet.extended_entities.media[0].type === "video")

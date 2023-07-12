@@ -22,7 +22,8 @@ function ponkJSONLookup(searchType, searchValue, msg) {
         msg.type.reply("Invalid input found...")
     }
     let jsonResult = fileJSON["drinkiepic"][searchType][searchValue];
-    getLink(msg, jsonResult["link"]);
+    //getLink(msg, jsonResult["link"]);
+    msg.type.reply(jsonResult["link"]);
 }
 
 /**
